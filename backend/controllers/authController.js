@@ -6,7 +6,22 @@ const { hash, compare } = bcrypt;
 
 export async function signup(req, res) {
   try {
-    const { email, password, hobbies, strengths, weaknesses } = req.body;
+    console.log("Signup request body:", req.body);
+
+    const {
+      name,
+      email,
+      password,
+      hobbies = [],
+      strengths = [],
+      weaknesses = [],
+    } = req.body;
+
+    if (!name || !email || !password) {
+      return res.status(400).json({
+        message: "Name, email and password are required",
+      });
+    }
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -16,6 +31,7 @@ export async function signup(req, res) {
     const hashedPw = await hash(password, 10);
 
     const user = new User({
+      name,
       email,
       password: hashedPw,
       hobbies,
@@ -27,7 +43,8 @@ export async function signup(req, res) {
 
     res.status(201).json({ message: "User created successfully" });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error("❌ Signup error:", err.message);
+    res.status(500).json({ message: err.message });
   }
 }
 
@@ -49,6 +66,7 @@ export async function login(req, res) {
     res.json({
       token,
       profile: {
+        name: user.name,
         email: user.email,
         hobbies: user.hobbies,
         strengths: user.strengths,
@@ -56,6 +74,7 @@ export async function login(req, res) {
       },
     });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error("❌ Login error:", err.message);
+    res.status(500).json({ message: err.message });
   }
 }

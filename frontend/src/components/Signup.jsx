@@ -48,13 +48,15 @@ const Signup = () => {
       return;
     }
 
+    setLoading(true);
     try {
-      setLoading(true);
       await axios.post("/api/auth/signup", form);
       navigate("/login");
     } catch (err) {
-      setError(err?.response?.data?.message || "Signup failed. Try again.");
-    } finally {
+      setError(
+        err.response?.data?.message ||
+          "An error occurred during signup. Please try again."
+      );
       setLoading(false);
     }
   };
@@ -67,62 +69,46 @@ const Signup = () => {
         {error && <div className="auth-error">{error}</div>}
 
         <form onSubmit={handleSubmit}>
-          {/* Basic Info */}
           <input
+            className="auth-input"
             type="text"
             name="name"
             placeholder="Full Name"
             value={form.name}
             onChange={handleChange}
-            className="auth-input"
             required
           />
 
           <input
+            className="auth-input"
             type="email"
             name="email"
             placeholder="Email Address"
             value={form.email}
             onChange={handleChange}
-            className="auth-input"
             required
           />
 
           <input
+            className="auth-input"
             type="password"
             name="password"
             placeholder="Password"
             value={form.password}
             onChange={handleChange}
-            className="auth-input"
             required
             minLength={6}
           />
 
-          {/* Profile Selection */}
-          <div className="signup-profile-section">
-            <h3 className="signup-profile-title">
-              Tell us about you (AI personalization)
-            </h3>
+          <ProfileSelection selections={form} onSelect={handleSelect} />
 
-            <ProfileSelection
-              selections={form}
-              onSelect={handleSelect}
-            />
-          </div>
-
-          <button
-            type="submit"
-            className="auth-button"
-            disabled={loading}
-          >
-            {loading ? "Creating Account..." : "Sign Up & Meet Your AI Friend"}
+          <button className="auth-button" type="submit" disabled={loading}>
+            {loading ? "Creating Account..." : "Sign Up"}
           </button>
         </form>
 
         <div className="auth-footer">
-          Already have an account?{" "}
-          <Link to="/login">Login here</Link>
+          Already have an account? <Link to="/login">Login</Link>
         </div>
       </div>
     </div>
