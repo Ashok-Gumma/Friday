@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import axios from "axios";
 
 const Chat = ({ profile, todayMood }) => {
   const [messages, setMessages] = useState([]);
@@ -13,12 +14,12 @@ const Chat = ({ profile, todayMood }) => {
 
   const synth = window.speechSynthesis;
 
-  /* 🔽 Auto scroll */
+  // Auto scroll
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  /* 🎙 Voice input */
+  // Voice input
   useEffect(() => {
     if (!recognition) return;
 
@@ -33,52 +34,37 @@ const Chat = ({ profile, todayMood }) => {
     return () => recognition?.stop();
   }, [voiceMode]);
 
-  const generateResponse = (userMessage) => {
-    let response = `Hey friend! About "${userMessage}" — `;
-
-    const moodMap = {
-      motivated: "Love that energy! Let’s crush it. ",
-      tired: "Take it slow today. ",
-      happy: "Your vibe is contagious! ",
-      stressed: "Breathe. You’ve got this. ",
-      focused: "Stay in the zone. ",
-      relaxed: "Chill vibes only. ",
-      anxious: "One step at a time. ",
-      bored: "Let’s make things interesting. ",
-    };
-
-    response += moodMap[todayMood] || "";
-
-    if (profile?.hobbies?.length)
-      response += `Since you enjoy ${profile.hobbies[0]}, try using that as motivation. `;
-
-    if (profile?.strengths?.includes("Creative"))
-      response += "Your creativity will help here. ";
-
-    if (profile?.weaknesses?.includes("Procrastination"))
-      response += "Start small — progress beats perfection. ";
-
-    return response;
-  };
-
-  const handleSend = (text = input) => {
+  const handleSend = async (text = input) => {
     if (!text.trim()) return;
 
+    // Add user message
     setMessages((prev) => [...prev, { type: "user", text }]);
+    setInput("");
 
-    const aiText = generateResponse(text);
+    try {
+      const res = await axios.post("/api/chat", {
+        message: text,
+        mood: todayMood,
+        profile: profile,
+      });
 
-    setTimeout(() => {
+      const aiText = res.data.reply;
+
       setMessages((prev) => [...prev, { type: "ai", text: aiText }]);
 
+      // Speak AI reply if voice mode is on
       if (voiceMode) {
         const utter = new SpeechSynthesisUtterance(aiText);
         utter.rate = todayMood === "relaxed" ? 0.85 : 1.1;
         synth.speak(utter);
       }
-    }, 500);
-
-    setInput("");
+    } catch (err) {
+      console.error("Chat error:", err);
+      setMessages((prev) => [
+        ...prev,
+        { type: "ai", text: "Sorry, I had trouble responding. 😅" },
+      ]);
+    }
   };
 
   return (
@@ -103,9 +89,7 @@ const Chat = ({ profile, todayMood }) => {
         {messages.map((msg, i) => (
           <div
             key={i}
-            className={`chat-message ${
-              msg.type === "user" ? "user" : "ai"
-            }`}
+            className={`chat-message ${msg.type === "user" ? "user" : "ai"}`}
           >
             {msg.text}
           </div>
