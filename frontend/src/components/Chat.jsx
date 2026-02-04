@@ -4,7 +4,8 @@ import axios from "axios";
 const Chat = ({ profile, todayMood }) => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
-  const [voiceMode, setVoiceMode] = useState(false);
+  const [voiceMode, setVoiceMode] = useState(false); // AI speaks back
+  const [listening, setListening] = useState(false); // User mic listening
   const chatEndRef = useRef(null);
 
   const recognition =
@@ -19,20 +20,36 @@ const Chat = ({ profile, todayMood }) => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Voice input
+  // Setup speech recognition once
   useEffect(() => {
     if (!recognition) return;
 
-    if (voiceMode) {
-      recognition.onresult = (e) => {
-        const text = e.results[0][0].transcript;
-        handleSend(text);
-      };
-      recognition.start();
+    recognition.onresult = (e) => {
+      const text = e.results[0][0].transcript;
+      setListening(false);
+      handleSend(text); // Send spoken text
+    };
+
+    recognition.onend = () => {
+      setListening(false);
+    };
+  }, []);
+
+  // Toggle mic for user
+  const toggleMic = () => {
+    if (!recognition) {
+      alert("Speech recognition not supported in this browser");
+      return;
     }
 
-    return () => recognition?.stop();
-  }, [voiceMode]);
+    if (listening) {
+      recognition.stop();
+      setListening(false);
+    } else {
+      recognition.start();
+      setListening(true);
+    }
+  };
 
   const handleSend = async (text = input) => {
     if (!text.trim()) return;
@@ -80,7 +97,7 @@ const Chat = ({ profile, todayMood }) => {
           className={`voice-btn ${voiceMode ? "active" : ""}`}
           onClick={() => setVoiceMode(!voiceMode)}
         >
-          🎙 {voiceMode ? "Voice ON" : "Voice OFF"}
+          🔊 {voiceMode ? "Voice Reply ON" : "Voice Reply OFF"}
         </button>
       </div>
 
@@ -105,6 +122,11 @@ const Chat = ({ profile, todayMood }) => {
           onKeyDown={(e) => e.key === "Enter" && handleSend()}
           placeholder="Type or speak..."
         />
+
+        <button onClick={toggleMic}>
+          {listening ? "🛑 Stop" : "🎤 Mic"}
+        </button>
+
         <button onClick={() => handleSend()}>Send</button>
       </div>
     </div>

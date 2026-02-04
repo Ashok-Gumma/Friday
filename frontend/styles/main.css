@@ -10,7 +10,7 @@ input:focus {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(to right, #373636, #eeeef0);
+  background: linear-gradient(to right, #1c1a1a, #3f3f42);
 }
 
 .auth-card {
@@ -263,15 +263,15 @@ input:focus {
 }
 
 .chat-message.user {
-  background: #aaaaac;
-  color: rgb(5, 5, 5);
+  background: #d6d6d7;
+  color: rgb(10, 9, 9);
   margin-left: auto;
   border-bottom-right-radius: 5px;
 }
 
 .chat-message.ai {
-  background: #faeded;
-  color: #1f2937;
+  background: #e0dfdf;
+  color: #0c0c0c;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
   margin-right: auto;
   border-bottom-left-radius: 4px;
