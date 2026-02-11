@@ -9,11 +9,22 @@ const Chat = () => {
   const [input, setInput] = useState("");
   const [todayMood, setTodayMood] = useState(null);
   const [listening, setListening] = useState(false);
-  const [voiceReply, setVoiceReply] = useState(false);
+  const [voiceReply, setVoiceReply] = useState(true);
   const [isTyping, setIsTyping] = useState(false);
 
+  const [voices, setVoices] = useState([]);
+  const [selectedVoice, setSelectedVoice] = useState("");
+
   const chatEndRef = useRef(null);
+
   const profile = JSON.parse(localStorage.getItem("userProfile") || "{}");
+
+  // Speech recognition
+  const SpeechRecognition =
+    window.SpeechRecognition || window.webkitSpeechRecognition;
+  const recognition = SpeechRecognition ? new SpeechRecognition() : null;
+
+  const synth = window.speechSynthesis;
 
   // Protect route
   useEffect(() => {
@@ -21,32 +32,48 @@ const Chat = () => {
     if (!token) navigate("/");
   }, [navigate]);
 
+  // Load available voices
+  useEffect(() => {
+    const loadVoices = () => {
+      const v = synth.getVoices();
+      setVoices(v);
+      if (v.length > 0 && !selectedVoice) {
+        setSelectedVoice(v[0].name);
+      }
+    };
+
+    loadVoices();
+    synth.onvoiceschanged = loadVoices;
+  }, [synth, selectedVoice]);
+
   // Auto scroll
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isTyping]);
 
-  // Speech recognition
-  const SpeechRecognition =
-    window.SpeechRecognition || window.webkitSpeechRecognition;
-  const recognition = SpeechRecognition ? new SpeechRecognition() : null;
-  const synth = window.speechSynthesis;
-
+  // Setup speech recognition
   useEffect(() => {
     if (!recognition) return;
 
     recognition.continuous = false;
-    recognition.interimResults = false;
+    recognition.interimResults = true;
 
     recognition.onresult = (e) => {
-      const transcript = e.results[0][0].transcript;
+      let transcript = "";
+      for (let i = 0; i < e.results.length; i++) {
+        transcript += e.results[i][0].transcript;
+      }
       setInput(transcript);
     };
 
     recognition.onend = () => {
       setListening(false);
+      if (input.trim()) {
+        handleSend(input);
+      }
     };
-  }, [recognition]);
+    // eslint-disable-next-line
+  }, [input]);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -56,7 +83,7 @@ const Chat = () => {
 
   const toggleMic = () => {
     if (!recognition) {
-      alert("Speech recognition not supported");
+      alert("Speech recognition not supported in this browser");
       return;
     }
 
@@ -72,17 +99,27 @@ const Chat = () => {
 
   const speakText = (text) => {
     if (!voiceReply) return;
+
     synth.cancel();
+
     const utter = new SpeechSynthesisUtterance(text);
-    synth.speak(utter);
+
+    const voice = voices.find((v) => v.name === selectedVoice);
+    if (voice) utter.voice = voice;
+
+    utter.rate = todayMood === "relaxed" ? 0.9 : 1.05;
+    utter.pitch = 1;
+
+    setTimeout(() => {
+      synth.speak(utter);
+    }, 100);
   };
 
-  const handleSend = async () => {
-    if (!input.trim()) return;
+  const handleSend = async (text = input) => {
+    if (!text.trim()) return;
 
-    const text = input;
-    setInput("");
     setMessages((prev) => [...prev, { type: "user", text }]);
+    setInput("");
     setIsTyping(true);
 
     try {
@@ -96,16 +133,20 @@ const Chat = () => {
 
       setIsTyping(false);
       setMessages((prev) => [...prev, { type: "ai", text: aiText }]);
+
+      // Speak AI reply
       speakText(aiText);
     } catch (err) {
+      console.error("Chat error:", err);
       setIsTyping(false);
       setMessages((prev) => [
         ...prev,
-        { type: "ai", text: "Sorry, something went wrong 😅" },
+        { type: "ai", text: "Sorry, I had trouble responding. 😅" },
       ]);
     }
   };
 
+  // Ask for mood first
   if (!todayMood) {
     return <MoodPrompt onMoodSelect={setTodayMood} />;
   }
@@ -117,16 +158,38 @@ const Chat = () => {
         <div className="chat-header">
           <div>
             <h2>Your AI Friend</h2>
-            <p>Mood: {todayMood}</p>
+            <p>Mood today: {todayMood}</p>
           </div>
 
           <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+            {/* Voice selector */}
+            <select
+              value={selectedVoice}
+              onChange={(e) => setSelectedVoice(e.target.value)}
+              style={{
+                padding: "6px 10px",
+                borderRadius: "999px",
+                border: "1px solid var(--border)",
+                fontSize: "12px",
+                background: "var(--card)",
+                color: "var(--text)",
+              }}
+              title="Select AI voice"
+            >
+              {voices.map((v, i) => (
+                <option key={i} value={v.name}>
+                  {v.name}
+                </option>
+              ))}
+            </select>
+
+            {/* Voice toggle */}
             <button
               className={`voice-btn ${voiceReply ? "active" : ""}`}
               onClick={() => setVoiceReply(!voiceReply)}
-              title="Toggle voice"
+              title="Toggle AI voice reply"
             >
-              🔊
+              🔊 {voiceReply ? "ON" : "OFF"}
             </button>
 
             <button className="logout-btn" onClick={handleLogout}>
@@ -138,14 +201,13 @@ const Chat = () => {
         {/* Messages */}
         <div className="chat-messages">
           {messages.length === 0 && !isTyping && (
-            <div className="chat-empty">👋 Start chatting!</div>
+            <div className="chat-empty">
+              👋 Type or use the mic to start talking!
+            </div>
           )}
 
           {messages.map((msg, i) => (
-            <div
-              key={i}
-              className={`chat-message ${msg.type === "user" ? "user" : "ai"}`}
-            >
+            <div key={i} className={`chat-message ${msg.type}`}>
               {msg.text}
             </div>
           ))}
@@ -165,18 +227,18 @@ const Chat = () => {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleSend()}
-            placeholder={listening ? "Listening..." : "Type your message..."}
+            placeholder={listening ? "Listening..." : "Type your message or use mic..."}
           />
 
           <button
             onClick={toggleMic}
+            title="Use microphone"
             className={`mic-btn ${listening ? "listening" : ""}`}
-            title="Mic"
           >
             {listening ? "🛑" : "🎤"}
           </button>
 
-          <button onClick={handleSend}>Send</button>
+          <button onClick={() => handleSend()}>Send</button>
         </div>
       </div>
     </div>
