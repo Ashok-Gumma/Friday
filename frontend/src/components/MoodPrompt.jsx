@@ -1,5 +1,3 @@
-import React from "react";
-
 const moods = [
   { label: "Motivated 💪", value: "motivated", className: "mood-red" },
   { label: "Tired 😴", value: "tired", className: "mood-gray" },
@@ -30,9 +28,7 @@ const MoodPrompt = ({ onMoodSelect }) => {
           ))}
         </div>
 
-        <p className="mood-helper">
-          You can change this anytime later
-        </p>
+        <p className="mood-helper">You can change this anytime later</p>
       </div>
     </div>
   );

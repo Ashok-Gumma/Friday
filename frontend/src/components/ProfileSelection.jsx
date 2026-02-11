@@ -42,10 +42,10 @@ const ProfileSelection = ({ selections, onSelect }) => {
     <div className="profile-section">
       {Object.keys(options).map((category) => (
         <div key={category} className="profile-card">
-          {/* Title */}
-          <h3 className="profile-title">{category}</h3>
+          <h3 className="profile-title">
+            {category.charAt(0).toUpperCase() + category.slice(1)}
+          </h3>
 
-          {/* Options */}
           <div className="profile-options">
             {options[category].map((item) => {
               const selected = selections[category]?.includes(item);
@@ -55,9 +55,7 @@ const ProfileSelection = ({ selections, onSelect }) => {
                   key={item}
                   type="button"
                   onClick={() => onSelect(category, item)}
-                  className={`profile-option ${
-                    selected ? "selected" : ""
-                  }`}
+                  className={`profile-option ${selected ? "selected" : ""}`}
                 >
                   {item}
                 </button>
