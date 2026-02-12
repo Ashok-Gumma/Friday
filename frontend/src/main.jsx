@@ -3,9 +3,8 @@ import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import App from "./App";
 
-// ✅ Correct relative paths
-import "/styles/index.css";
-import "/styles/main.css";
+import "../styles/index.css";
+import "../styles/main.css";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <BrowserRouter>
