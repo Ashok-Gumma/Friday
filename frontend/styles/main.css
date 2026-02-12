@@ -793,6 +793,7 @@ select:focus {
   font-size: 16px;
   font-weight: 700;
   margin-bottom: 14px;
+  color: var(--text);
 }
 
 .profile-options {
@@ -819,7 +820,7 @@ select:focus {
 
 .profile-option.selected {
   background: var(--primary);
-  color: white;
+  color: rgb(249, 245, 245);
   border-color: var(--primary);
   box-shadow: 0 6px 16px rgba(0,0,0,0.2);
 }
