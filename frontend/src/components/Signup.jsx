@@ -4,8 +4,9 @@ import axios from "axios";
 import ProfileSelection from "./ProfileSelection";
 import ThemeSwitch from "./ThemeSwitch";
 
-// ✅ Import your logo
+// ✅ Import logo + background
 import logo from "../assets/as-you-wish-logo.png";
+import homeBg from "../assets/home-logo.png";
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -68,59 +69,88 @@ const Signup = () => {
   };
 
   return (
-    <div className="auth-container">
-      {/* Theme switch top-right */}
-      <div style={{ position: "absolute", top: 20, right: 20 }}>
-        <ThemeSwitch theme={theme} setTheme={setTheme} />
-      </div>
+    <div
+      className="auth-split auth-bg-merged"
+      style={{
+        minHeight: "100vh",
+        backgroundImage: `url(${homeBg})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundRepeat: "no-repeat",
+      }}
+    >
+      {/* 🔹 Blurred logo layer */}
+      <div
+        className="bg-logo-blur"
+        style={{
+          backgroundImage: `url(${logo})`,
+        }}
+      />
 
-      <div className="auth-card auth-card-large">
-        {/* ✅ Logo + Brand */}
-        <div style={{ textAlign: "center", marginBottom: "16px" }}>
-          <img src={logo} alt="As You Wish" className="auth-logo" />
-          <h2 className="auth-title">Create Your Account</h2>
+      {/* Left: Form */}
+      <div className="auth-side">
+        <div className="auth-theme-switch">
+          <ThemeSwitch theme={theme} setTheme={setTheme} />
         </div>
 
-        {error && <div className="auth-error">{error}</div>}
+        <div className="auth-card auth-card-large">
+          <div className="auth-brand">
+            <h2 className="auth-title">Create Your Account</h2>
+            <p className="auth-subtitle">Join and personalize your AI experience</p>
+          </div>
 
-        <form onSubmit={handleSubmit}>
-          <input
-            className="auth-input"
-            name="name"
-            placeholder="Full Name"
-            value={form.name}
-            onChange={handleChange}
-            required
-          />
-          <input
-            className="auth-input"
-            name="email"
-            type="email"
-            placeholder="Email"
-            value={form.email}
-            onChange={handleChange}
-            required
-          />
-          <input
-            className="auth-input"
-            name="password"
-            type="password"
-            placeholder="Password"
-            value={form.password}
-            onChange={handleChange}
-            required
-            minLength={6}
-          />
+          {error && <div className="auth-error">{error}</div>}
 
-          <ProfileSelection selections={form} onSelect={handleSelect} />
+          <form onSubmit={handleSubmit}>
+            <input
+              className="auth-input"
+              name="name"
+              placeholder="Full Name"
+              value={form.name}
+              onChange={handleChange}
+              required
+            />
+            <input
+              className="auth-input"
+              name="email"
+              type="email"
+              placeholder="Email"
+              value={form.email}
+              onChange={handleChange}
+              required
+            />
+            <input
+              className="auth-input"
+              name="password"
+              type="password"
+              placeholder="Password"
+              value={form.password}
+              onChange={handleChange}
+              required
+              minLength={6}
+            />
 
-          <button className="auth-button" type="submit" disabled={loading}>
-            {loading ? "Creating Account..." : "Sign Up"}
-          </button>
-        </form>
+            <div className="auth-profile-section">
+              <ProfileSelection selections={form} onSelect={handleSelect} />
+            </div>
 
-        <div className="auth-footer">
-          Already have an account? <Link to="/login">Login</Link>
+            <button className="auth-button" type="submit" disabled={loading}>
+              {loading ? "Creating Account..." : "Sign Up"}
+            </button>
+          </form>
+
+          <div className="auth-footer">
+            Already have an account? <Link to="/login">Login</Link>
+          </div>
+        </div>
+      </div>
+
+      {/* Right: Logo / Visual */}
+      <div className="auth-visual">
+        <div className="auth-visual-overlay">
+          <img src={logo} alt="As You Wish" className="auth-logo" />
+          <h1>As You Wish!</h1>
+          <p>Your personal AI companion</p>
         </div>
       </div>
     </div>

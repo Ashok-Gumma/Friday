@@ -3,6 +3,10 @@ import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
 import ThemeSwitch from "./ThemeSwitch";
 
+// ✅ Import background + logo
+import homeBg from "../assets/home-logo.png";
+import logoBg from "../assets/as-you-wish-logo.png";
+
 const Login = () => {
   const navigate = useNavigate();
   const [form, setForm] = useState({ email: "", password: "" });
@@ -38,15 +42,34 @@ const Login = () => {
   };
 
   return (
-    <div className="auth-split">
+    <div
+      className="auth-split auth-bg-merged"
+      style={{
+        minHeight: "100vh",
+        backgroundImage: `url(${homeBg})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundRepeat: "no-repeat",
+      }}
+    >
+      {/* 🔹 Blurred logo layer */}
+      <div
+        className="bg-logo-blur"
+        style={{
+          backgroundImage: `url(${logoBg})`,
+        }}
+      />
+
+      {/* Left visual */}
       <div className="auth-visual">
         <div className="auth-visual-overlay">
-          <img src="/as-you-wish-logo.png" alt="As You Wish" className="auth-logo" />
-          <h1>As You Wish</h1>
+          <img src={logoBg} alt="As You Wish" className="auth-logo" />
+          <h1>As You Wish!</h1>
           <p>Your smart AI companion for daily conversations</p>
         </div>
       </div>
 
+      {/* Right form */}
       <div className="auth-side">
         <div style={{ position: "absolute", top: 20, right: 20 }}>
           <ThemeSwitch theme={theme} setTheme={setTheme} />
