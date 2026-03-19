@@ -32,9 +32,11 @@ const Home = () => {
   return (
     <div className="home-container">
       <header className="home-header">
-        <div className="home-header-inner">
-          <h1 className="home-title"> HEY Jarvis</h1>
-          <button className="logout-btn" onClick={handleLogout}>
+        <div className="home-brand">
+          <span> As You Wish</span>
+        </div>
+        <div className="home-actions">
+          <button className="btn-secondary" onClick={handleLogout}>
             Logout
           </button>
         </div>

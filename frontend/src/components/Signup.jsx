@@ -4,9 +4,7 @@ import axios from "axios";
 import ProfileSelection from "./ProfileSelection";
 import ThemeSwitch from "./ThemeSwitch";
 
-// ✅ Import logo + background
 import logo from "../assets/as-you-wish-logo.png";
-import homeBg from "../assets/home-logo.png";
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -69,88 +67,60 @@ const Signup = () => {
   };
 
   return (
-    <div
-      className="auth-split auth-bg-merged"
-      style={{
-        minHeight: "100vh",
-        backgroundImage: `url(${homeBg})`,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        backgroundRepeat: "no-repeat",
-      }}
-    >
-      {/* 🔹 Blurred logo layer */}
-      <div
-        className="bg-logo-blur"
-        style={{
-          backgroundImage: `url(${logo})`,
-        }}
-      />
-
-      {/* Left: Form */}
-      <div className="auth-side">
-        <div className="auth-theme-switch">
-          <ThemeSwitch theme={theme} setTheme={setTheme} />
-        </div>
-
-        <div className="auth-card auth-card-large">
-          <div className="auth-brand">
-            <h2 className="auth-title">Create Your Account</h2>
-            <p className="auth-subtitle">Join and personalize your AI experience</p>
-          </div>
-
-          {error && <div className="auth-error">{error}</div>}
-
-          <form onSubmit={handleSubmit}>
-            <input
-              className="auth-input"
-              name="name"
-              placeholder="Full Name"
-              value={form.name}
-              onChange={handleChange}
-              required
-            />
-            <input
-              className="auth-input"
-              name="email"
-              type="email"
-              placeholder="Email"
-              value={form.email}
-              onChange={handleChange}
-              required
-            />
-            <input
-              className="auth-input"
-              name="password"
-              type="password"
-              placeholder="Password"
-              value={form.password}
-              onChange={handleChange}
-              required
-              minLength={6}
-            />
-
-            <div className="auth-profile-section">
-              <ProfileSelection selections={form} onSelect={handleSelect} />
-            </div>
-
-            <button className="auth-button" type="submit" disabled={loading}>
-              {loading ? "Creating Account..." : "Sign Up"}
-            </button>
-          </form>
-
-          <div className="auth-footer">
-            Already have an account? <Link to="/login">Login</Link>
-          </div>
-        </div>
+    <div className="auth-split">
+      <div className="auth-theme-switch">
+        <ThemeSwitch theme={theme} setTheme={setTheme} />
       </div>
 
-      {/* Right: Logo / Visual */}
-      <div className="auth-visual">
-        <div className="auth-visual-overlay">
+      <div className="auth-card" style={{ maxWidth: '600px' }}>
+        <div className="auth-brand">
           <img src={logo} alt="As You Wish" className="auth-logo" />
-          <h1>As You Wish!</h1>
-          <p>Your personal AI companion</p>
+          <h2 className="auth-title">Create Your Account</h2>
+          <p className="auth-subtitle">Join and personalize your AI experience</p>
+        </div>
+
+        {error && <div className="auth-error">{error}</div>}
+
+        <form onSubmit={handleSubmit}>
+          <input
+            className="auth-input"
+            name="name"
+            placeholder="Full Name"
+            value={form.name}
+            onChange={handleChange}
+            required
+          />
+          <input
+            className="auth-input"
+            name="email"
+            type="email"
+            placeholder="Email"
+            value={form.email}
+            onChange={handleChange}
+            required
+          />
+          <input
+            className="auth-input"
+            name="password"
+            type="password"
+            placeholder="Password"
+            value={form.password}
+            onChange={handleChange}
+            required
+            minLength={6}
+          />
+
+          <div className="auth-profile-section" style={{ textAlign: "left" }}>
+            <ProfileSelection selections={form} onSelect={handleSelect} />
+          </div>
+
+          <button className="auth-button" type="submit" disabled={loading}>
+            {loading ? "Creating Account..." : "Sign Up"}
+          </button>
+        </form>
+
+        <div className="auth-footer">
+          Already have an account? <Link to="/login">Login</Link>
         </div>
       </div>
     </div>

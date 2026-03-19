@@ -1,10 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import ThemeSwitch from "./ThemeSwitch";
-
-// ✅ Import images from assets
 import logo from "../assets/as-you-wish-logo.png";
-import homeBg from "../assets/home-logo.png";
 
 const Home = () => {
   const navigate = useNavigate();
@@ -28,116 +25,67 @@ const Home = () => {
     if (token) navigate("/chat");
   }, [token, navigate]);
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("userProfile");
-    navigate("/");
-  };
-
   return (
-    <div
-      className="home-container"
-      style={{
-        backgroundImage: `url(${homeBg})`,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        backgroundRepeat: "no-repeat",
-      }}
-    >
-      {/* Header */}
+    <div className="home-container">
+      {/* Navbar matching Antigravity */}
       <header className="home-header">
-        <div className="home-header-inner">
-          <div className="home-brand">
-            <img src={logo} alt="As You Wish" />
-            <span>As You Wish!</span>
-          </div>
+        <div className="home-brand">
+          <img src={logo} alt="Logo" />
+          <span>As You Wish</span>
+        </div>
+        
+        {/* Dummy links for aesthetic matching */}
+        <nav style={{ display: 'flex', gap: '24px', fontSize: '15px', fontWeight: '500', color: 'var(--text)' }}>
+          <span style={{ cursor: 'pointer' }}>Product</span>
+          <span style={{ cursor: 'pointer' }}>Use Cases </span>
+          <span style={{ cursor: 'pointer' }}>Pricing</span>
+          <span style={{ cursor: 'pointer' }}>Blog</span>
+          <span style={{ cursor: 'pointer' }}>Resources </span>
+        </nav>
 
-          <div className="home-actions">
-            <ThemeSwitch theme={theme} setTheme={setTheme} />
-
-            {!token ? (
-              <>
-                <Link to="/login" className="btn-secondary">Login</Link>
-                <Link to="/signup" className="btn-primary">Get Started</Link>
-              </>
-            ) : (
-              <button className="btn-primary" onClick={handleLogout}>
-                Sign Out
-              </button>
-            )}
-          </div>
+        <div className="home-actions">
+          <ThemeSwitch theme={theme} setTheme={setTheme} />
+          {!token ? (
+            <Link to="/signup" className="btn-primary">Get Started</Link>
+          ) : null}
         </div>
       </header>
 
-      {/* Hero */}
+      {/* Hero Section matching Antigravity */}
       <section className="home-hero">
-        <h1>
-          Your Personal AI, <span>As You Wish!</span>
-        </h1>
-        <p>
-          Chat smarter, think faster, and get things done with your own AI companion.
-          Talk by text or voice, choose your mood, and get responses that feel human.
-        </p>
-
-        {!token && (
-          <div className="hero-actions">
-            <Link to="/signup" className="btn-primary">Get Started Free</Link>
-            <Link to="/login" className="btn-secondary">Login</Link>
-          </div>
-        )}
-      </section>
-
-      {/* How it works */}
-      <section className="home-section alt">
-        <div className="section-inner">
-          <h2>How It Works</h2>
-          <p className="section-sub">Simple. Fast. Powerful.</p>
-
-          <div className="card-grid">
-            {[
-              { title: "1. Create Account", desc: "Sign up and set your profile preferences." },
-              { title: "2. Choose Your Mood", desc: "Pick how your AI should talk to you today." },
-              { title: "3. Start Chatting", desc: "Use text or voice to talk with your AI." },
-              { title: "4. Get Smart Replies", desc: "Receive helpful, human-like responses instantly." },
-            ].map((item, i) => (
-              <div key={i} className="info-card">
-                <h3>{item.title}</h3>
-                <p>{item.desc}</p>
-              </div>
-            ))}
-          </div>
+        <h1>Experience liftoff with your<br/>next-generation AI</h1>
+        
+        <div className="hero-actions" style={{ marginTop: '20px' }}>
+          {!token ? (
+            <>
+              <Link to="/signup" className="btn-primary">Get Started Free</Link>
+              <Link to="/login" className="btn-secondary">Log In to Account</Link>
+            </>
+          ) : (
+            <Link to="/chat" className="btn-primary">Go to Chat</Link>
+          )}
         </div>
       </section>
 
-      {/* Features */}
-      <section className="home-section">
+      {/* Kept a minimal sections to showcase theme features downwards */}
+      <section className="home-section" style={{ background: 'transparent', borderTop: 'none' }}>
         <div className="section-inner">
-          <h2>Why You’ll Love It</h2>
-          <p className="section-sub">Built to feel personal, fast, and powerful.</p>
-
-          <div className="card-grid">
-            {[
-              "🎙 Voice Input & AI Voice Replies",
-              "🎭 Mood-Based Personalities",
-              "⚡ Fast & Smooth Chat Experience",
-              "🎨 Multiple Themes",
-              "🧠 Smart, Context-Aware Replies",
-              "🔒 Secure Login System",
-            ].map((text, i) => (
-              <div key={i} className="feature-card">{text}</div>
-            ))}
+          <div className="card-grid" style={{ marginTop: '60px' }}>
+            <div className="info-card">
+              <h3>1. Create Account</h3>
+              <p>Sign up and set your profile preferences rapidly.</p>
+            </div>
+            <div className="info-card">
+              <h3>2. Choose Your Mood</h3>
+              <p>Pick how your AI should talk to you today.</p>
+            </div>
+            <div className="info-card">
+              <h3>3. Start Chatting</h3>
+              <p>Use text or voice to talk with your AI seamlessly.</p>
+            </div>
           </div>
         </div>
       </section>
-
-      {/* CTA */}
-      {!token && (
-        <section className="home-cta">
-          <h2>Ready to talk with your AI?</h2>
-          <p>Create your account and start chatting in seconds.</p>
-          <Link to="/signup" className="btn-primary">Get Started Now 🚀</Link>
-        </section>
-      )}
     </div>
   );
 };

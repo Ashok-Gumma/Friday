@@ -3,9 +3,6 @@ import axios from "axios";
 import MoodPrompt from "./MoodPrompt";
 import { useNavigate } from "react-router-dom";
 
-// ✅ Change this path ONLY if needed
-import chatBg from "../assets/chat-logo.png";
-
 const Chat = () => {
   const navigate = useNavigate();
   const [messages, setMessages] = useState([]);
@@ -13,6 +10,7 @@ const Chat = () => {
   const [todayMood, setTodayMood] = useState(null);
   const [listening, setListening] = useState(false);
   const [voiceReply, setVoiceReply] = useState(true);
+  const voiceReplyRef = useRef(true);
   const [isTyping, setIsTyping] = useState(false);
 
   const [voices, setVoices] = useState([]);
@@ -94,7 +92,7 @@ const Chat = () => {
   };
 
   const speakText = (text) => {
-    if (!voiceReply) return;
+    if (!voiceReplyRef.current) return;
     synth.cancel();
     const utter = new SpeechSynthesisUtterance(text);
     const voice = voices.find((v) => v.name === selectedVoice);
@@ -138,205 +136,96 @@ const Chat = () => {
   if (!todayMood) return <MoodPrompt onMoodSelect={setTodayMood} />;
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        backgroundImage: `url(${chatBg})`,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        backgroundRepeat: "no-repeat",
-        position: "relative",
-        color: "white",
-      }}
-    >
-      {/* Top Right Controls */}
-      <div
-        style={{
-          position: "fixed",
-          top: 20,
-          right: 20,
-          display: "flex",
-          gap: 10,
-          zIndex: 10,
-          alignItems: "center",
-        }}
-      >
-        <select
-          value={selectedVoice}
-          onChange={(e) => setSelectedVoice(e.target.value)}
-          style={{
-            padding: "6px 10px",
-            borderRadius: "999px",
-            border: "1px solid rgba(255,255,255,0.3)",
-            background: "rgba(0,0,0,0.6)",
-            color: "white",
-          }}
-        >
-          {voices.map((v, i) => (
-            <option key={i} value={v.name} style={{ color: "black" }}>
-              {v.name}
-            </option>
-          ))}
-        </select>
+    <div className="chat-wrapper">
+      <div className="chat-card">
+        {/* Header */}
+        <div className="chat-header">
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            <h2 style={{ fontSize: "18px", fontWeight: "600", margin: 0 }}>As You Wish AI</h2>
+            <p>Mood: {todayMood}</p>
+          </div>
 
-        <button
-          onClick={() => setVoiceReply(!voiceReply)}
-          style={{
-            padding: "6px 14px",
-            borderRadius: "999px",
-            background: voiceReply ? "#6366f1" : "rgba(0,0,0,0.6)",
-            color: "white",
-            border: "1px solid rgba(255,255,255,0.3)",
-          }}
-          title="Toggle AI voice"
-        >
-          🔊
-        </button>
-
-        <button
-          onClick={handleLogout}
-          style={{
-            padding: "6px 14px",
-            borderRadius: "999px",
-            background: "rgba(239,68,68,0.9)",
-            color: "white",
-            border: "none",
-            fontWeight: 600,
-          }}
-        >
-          Sign Out
-        </button>
-      </div>
-
-      {/* Title */}
-      <div style={{ textAlign: "center", paddingTop: 40 }}>
-        <h1 style={{ fontSize: 42, fontWeight: 900 }}>As You Wish</h1>
-        <p style={{ opacity: 0.85 }}>Mood: {todayMood}</p>
-      </div>
-
-      {/* Messages Area */}
-      <div
-        style={{
-          maxWidth: 900,
-          margin: "40px auto 120px",
-          padding: "0 20px",
-        }}
-      >
-        {messages.map((m, i) => (
-          <div
-            key={i}
-            style={{
-              marginBottom: 14,
-              display: "flex",
-              justifyContent: m.type === "user" ? "flex-end" : "flex-start",
-              animation: "popIn 0.25s ease",
-            }}
-          >
-            <div
-              style={{
-                maxWidth: "70%",
-                padding: "10px 14px",
-                borderRadius: 16,
-                background:
-                  m.type === "user"
-                    ? "linear-gradient(135deg, #6366f1, #22d3ee)"
-                    : "rgba(0,0,0,0.6)",
-                color: m.type === "user" ? "#020617" : "white",
-                backdropFilter: "blur(10px)",
-                boxShadow:
-                  m.type === "user"
-                    ? "0 0 20px rgba(99,102,241,0.6)"
-                    : "0 0 20px rgba(34,211,238,0.4)",
-              }}
+          <div className="chat-header-actions">
+            <select
+              value={selectedVoice}
+              onChange={(e) => setSelectedVoice(e.target.value)}
             >
+              {voices.map((v, i) => (
+                <option key={i} value={v.name}>{v.name}</option>
+              ))}
+            </select>
+
+            <button
+              onClick={() => {
+                const newValue = !voiceReply;
+                setVoiceReply(newValue);
+                voiceReplyRef.current = newValue;
+                if (!newValue) synth.cancel(); // Stop talking immediately if turned off
+              }}
+              className="voice-btn"
+              style={{ background: voiceReply ? "var(--primary)" : "transparent", color: voiceReply ? "white" : "inherit" }}
+              title="Toggle AI voice"
+            >
+              🔊
+            </button>
+
+            <button
+              onClick={handleLogout}
+              className="btn-secondary"
+            >
+              Sign Out
+            </button>
+          </div>
+        </div>
+
+        {/* Messages */}
+        <div className="chat-messages">
+          {messages.length === 0 ? (
+            <div className="chat-empty">
+              👋 Say hello to your AI!
+            </div>
+          ) : null}
+
+          {messages.map((m, i) => (
+            <div key={i} className={`chat-message ${m.type === "user" ? "user" : "ai"}`}>
               {m.text}
             </div>
-          </div>
-        ))}
+          ))}
 
-        {isTyping && (
-          <div style={{ opacity: 0.7, fontStyle: "italic" }}>
-            AI is typing...
-          </div>
-        )}
+          {isTyping && (
+            <div className="typing-indicator">
+              AI is typing<span className="dots"></span>
+            </div>
+          )}
 
-        <div ref={chatEndRef} />
+          <div ref={chatEndRef} />
+        </div>
+
+        {/* Input Area */}
+        <div className="chat-input">
+          <input
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder={listening ? "Listening..." : "Type your message..."}
+            onKeyDown={(e) => e.key === "Enter" && handleSend()}
+          />
+
+          <button
+            onClick={toggleMic}
+            className={`voice-btn flex-shrink-0 ${listening ? "active" : ""}`}
+            title="Use microphone"
+          >
+            🎤
+          </button>
+
+          <button
+            onClick={() => handleSend()}
+            disabled={!input.trim()}
+          >
+            Send
+          </button>
+        </div>
       </div>
-
-      {/* Input Bar */}
-      <div
-        style={{
-          position: "fixed",
-          bottom: 20,
-          left: "50%",
-          transform: "translateX(-50%)",
-          width: "90%",
-          maxWidth: 900,
-          display: "flex",
-          gap: 10,
-          background: "rgba(0,0,0,0.6)",
-          padding: 10,
-          borderRadius: 999,
-          backdropFilter: "blur(10px)",
-        }}
-      >
-        <input
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder={listening ? "Listening..." : "Type your message..."}
-          onKeyDown={(e) => e.key === "Enter" && handleSend()}
-          style={{
-            flex: 1,
-            padding: "10px 14px",
-            borderRadius: 999,
-            border: "none",
-            outline: "none",
-          }}
-        />
-
-        <button
-          onClick={toggleMic}
-          style={{
-            padding: "0 16px",
-            borderRadius: 999,
-            background: listening ? "#ef4444" : "#6366f1",
-            color: "white",
-            border: "none",
-          }}
-          title="Use microphone"
-        >
-          🎤
-        </button>
-
-        <button
-          onClick={() => handleSend()}
-          disabled={!input.trim()}
-          style={{
-            padding: "0 20px",
-            borderRadius: 999,
-            background: "#22d3ee",
-            color: "#020617",
-            border: "none",
-            fontWeight: 600,
-          }}
-        >
-          Send
-        </button>
-      </div>
-
-      {/* Animations */}
-      <style>{`
-        @keyframes popIn {
-          from {
-            transform: scale(0.95) translateY(6px);
-            opacity: 0;
-          }
-          to {
-            transform: scale(1) translateY(0);
-            opacity: 1;
-          }
-        }
-      `}</style>
     </div>
   );
 };

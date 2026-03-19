@@ -3,8 +3,6 @@ import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
 import ThemeSwitch from "./ThemeSwitch";
 
-// ✅ Import background + logo
-import homeBg from "../assets/home-logo.png";
 import logoBg from "../assets/as-you-wish-logo.png";
 
 const Login = () => {
@@ -42,69 +40,44 @@ const Login = () => {
   };
 
   return (
-    <div
-      className="auth-split auth-bg-merged"
-      style={{
-        minHeight: "100vh",
-        backgroundImage: `url(${homeBg})`,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        backgroundRepeat: "no-repeat",
-      }}
-    >
-      {/* 🔹 Blurred logo layer */}
-      <div
-        className="bg-logo-blur"
-        style={{
-          backgroundImage: `url(${logoBg})`,
-        }}
-      />
-
-      {/* Left visual */}
-      <div className="auth-visual">
-        <div className="auth-visual-overlay">
-          <img src={logoBg} alt="As You Wish" className="auth-logo" />
-          <h1>As You Wish!</h1>
-          <p>Your smart AI companion for daily conversations</p>
-        </div>
+    <div className="auth-split">
+      <div className="auth-theme-switch">
+        <ThemeSwitch theme={theme} setTheme={setTheme} />
       </div>
 
-      {/* Right form */}
-      <div className="auth-side">
-        <div style={{ position: "absolute", top: 20, right: 20 }}>
-          <ThemeSwitch theme={theme} setTheme={setTheme} />
+      <div className="auth-card">
+        <div className="auth-brand">
+          <img src={logoBg} alt="As You Wish" className="auth-logo" />
+          <h2 className="auth-title">Welcome Back</h2>
+          <p className="auth-subtitle">Log in to your smart AI companion</p>
         </div>
 
-        <div className="auth-card">
-          <h2 className="auth-title">Welcome Back</h2>
+        {error && <div className="auth-error">{error}</div>}
 
-          {error && <div className="auth-error">{error}</div>}
+        <form onSubmit={handleSubmit}>
+          <input
+            className="auth-input"
+            name="email"
+            type="email"
+            placeholder="Email"
+            value={form.email}
+            onChange={handleChange}
+            required
+          />
+          <input
+            className="auth-input"
+            name="password"
+            type="password"
+            placeholder="Password"
+            value={form.password}
+            onChange={handleChange}
+            required
+          />
+          <button className="auth-button" type="submit">Login</button>
+        </form>
 
-          <form onSubmit={handleSubmit}>
-            <input
-              className="auth-input"
-              name="email"
-              type="email"
-              placeholder="Email"
-              value={form.email}
-              onChange={handleChange}
-              required
-            />
-            <input
-              className="auth-input"
-              name="password"
-              type="password"
-              placeholder="Password"
-              value={form.password}
-              onChange={handleChange}
-              required
-            />
-            <button className="auth-button" type="submit">Login</button>
-          </form>
-
-          <div className="auth-footer">
-            Don’t have an account? <Link to="/signup">Sign up</Link>
-          </div>
+        <div className="auth-footer">
+          Don’t have an account? <Link to="/signup">Sign up</Link>
         </div>
       </div>
     </div>
