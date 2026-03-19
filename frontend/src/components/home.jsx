@@ -33,15 +33,6 @@ const Home = () => {
           <img src={logo} alt="Logo" />
           <span>As You Wish</span>
         </div>
-        
-        {/* Dummy links for aesthetic matching */}
-        <nav style={{ display: 'flex', gap: '24px', fontSize: '15px', fontWeight: '500', color: 'var(--text)' }}>
-          <span style={{ cursor: 'pointer' }}>Product</span>
-          <span style={{ cursor: 'pointer' }}>Use Cases </span>
-          <span style={{ cursor: 'pointer' }}>Pricing</span>
-          <span style={{ cursor: 'pointer' }}>Blog</span>
-          <span style={{ cursor: 'pointer' }}>Resources </span>
-        </nav>
 
         <div className="home-actions">
           <ThemeSwitch theme={theme} setTheme={setTheme} />
@@ -53,8 +44,8 @@ const Home = () => {
 
       {/* Hero Section matching Antigravity */}
       <section className="home-hero">
-        <h1>Experience liftoff with your<br/>next-generation AI</h1>
-        
+        <h1>Experience liftoff with your<br />next-generation AI</h1>
+
         <div className="hero-actions" style={{ marginTop: '20px' }}>
           {!token ? (
             <>
