@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import ThemeSwitch from "../components/ThemeSwitch";
-import logoBg from "../assets/as-you-wish-logo.png";
+import ProfileSelection from "../components/ProfileSelection";
+import logo from "../assets/white-logo.png";
 
-const Profile = ({ theme, setTheme }) => {
+const Profile = () => {
   const navigate = useNavigate();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -59,34 +59,13 @@ const Profile = ({ theme, setTheme }) => {
     }
   };
 
-  const addStrength = () => {
-    if (strengthInput.trim()) {
-      setProfile({
-        ...profile,
-        strengths: [...profile.strengths, strengthInput.trim()],
-      });
-      setStrengthInput("");
-    }
-  };
-
-  const removeStrength = (index) => {
-    const newStrengths = profile.strengths.filter((_, i) => i !== index);
-    setProfile({ ...profile, strengths: newStrengths });
-  };
-
-  const addWeakness = () => {
-    if (weaknessInput.trim()) {
-      setProfile({
-        ...profile,
-        weaknesses: [...profile.weaknesses, weaknessInput.trim()],
-      });
-      setWeaknessInput("");
-    }
-  };
-
-  const removeWeakness = (index) => {
-    const newWeaknesses = profile.weaknesses.filter((_, i) => i !== index);
-    setProfile({ ...profile, weaknesses: newWeaknesses });
+  const handleSelect = (category, value) => {
+    setProfile((prev) => ({
+      ...prev,
+      [category]: prev[category].includes(value)
+        ? prev[category].filter((v) => v !== value)
+        : [...prev[category], value],
+    }));
   };
 
   if (loading) return <div className="loading-screen">Loading...</div>;
@@ -94,7 +73,13 @@ const Profile = ({ theme, setTheme }) => {
   return (
     <div className="profile-page">
       <div className="profile-header">
-        <ThemeSwitch theme={theme} setTheme={setTheme} />
+        <div 
+          onClick={() => navigate("/")} 
+          style={{ display: "flex", alignItems: "center", gap: "12px", cursor: "pointer" }}
+        >
+          <img src={logo} alt="Logo" style={{ width: "32px", height: "32px", objectFit: "contain" }} />
+          <h2 style={{ fontSize: "18px", fontWeight: "700", margin: 0, color: "white" }}>As You Wish</h2>
+        </div>
         <button className="back-button" onClick={() => navigate("/chat")}>
           Back to Chat
         </button>
@@ -104,7 +89,7 @@ const Profile = ({ theme, setTheme }) => {
         <div className="profile-card">
           <div className="profile-user-info">
             <img 
-              src={profile.avatar || logoBg} 
+              src={profile.avatar || logo} 
               alt="Avatar" 
               className="profile-avatar" 
             />
@@ -114,48 +99,8 @@ const Profile = ({ theme, setTheme }) => {
             </div>
           </div>
 
-          <div className="profile-sections">
-            <div className="profile-section">
-              <h3>My Strengths</h3>
-              <div className="tag-input">
-                <input
-                  type="text"
-                  placeholder="Add a strength..."
-                  value={strengthInput}
-                  onChange={(e) => setStrengthInput(e.target.value)}
-                  onKeyPress={(e) => e.key === "Enter" && addStrength()}
-                />
-                <button onClick={addStrength}>Add</button>
-              </div>
-              <div className="tags">
-                {profile.strengths.map((s, i) => (
-                  <span key={i} className="tag strength">
-                    {s} <button onClick={() => removeStrength(i)}>&times;</button>
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            <div className="profile-section">
-              <h3>My Weaknesses</h3>
-              <div className="tag-input">
-                <input
-                  type="text"
-                  placeholder="Add a weakness..."
-                  value={weaknessInput}
-                  onChange={(e) => setWeaknessInput(e.target.value)}
-                  onKeyPress={(e) => e.key === "Enter" && addWeakness()}
-                />
-                <button onClick={addWeakness}>Add</button>
-              </div>
-              <div className="tags">
-                {profile.weaknesses.map((w, i) => (
-                  <span key={i} className="tag weakness">
-                    {w} <button onClick={() => removeWeakness(i)}>&times;</button>
-                  </span>
-                ))}
-              </div>
-            </div>
+          <div className="auth-profile-section" style={{ textAlign: "left" }}>
+            <ProfileSelection selections={profile} onSelect={handleSelect} />
           </div>
 
           {message && <div className="profile-message">{message}</div>}

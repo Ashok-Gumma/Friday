@@ -15,32 +15,23 @@ const ProtectedRoute = ({ children }) => {
 };
 
 function App() {
-  const [theme, setTheme] = useState(
-    localStorage.getItem("theme") || "light"
-  );
-
-  useEffect(() => {
-    document.documentElement.setAttribute("data-theme", theme);
-    localStorage.setItem("theme", theme);
-  }, [theme]);
-
   const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
   return (
     <GoogleOAuthProvider clientId={googleClientId}>
       <PageTransition>
         <Routes>
-          <Route path="/" element={<Home theme={theme} setTheme={setTheme} />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
+          <Route path="/" element={<Home  />} />
+          <Route path="/login" element={<Login  />} />
+          <Route path="/signup" element={<Signup  />} />
           <Route path="/chat" element={
             <ProtectedRoute>
-              <Chat theme={theme} setTheme={setTheme} />
+              <Chat  />
             </ProtectedRoute>
           } />
           <Route path="/profile" element={
             <ProtectedRoute>
-              <Profile theme={theme} setTheme={setTheme} />
+              <Profile  />
             </ProtectedRoute>
           } />
           <Route path="*" element={<Navigate to="/" replace />} />

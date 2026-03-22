@@ -2,9 +2,8 @@ import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 import ProfileSelection from "./ProfileSelection";
-import ThemeSwitch from "./ThemeSwitch";
 
-import logo from "../assets/as-you-wish-logo.png";
+import logo from "../assets/white-logo.png";
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -20,18 +19,6 @@ const Signup = () => {
 
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-
-  const [theme, setTheme] = useState(localStorage.getItem("theme") || "light");
-
-  useEffect(() => {
-    const root = document.documentElement;
-    root.classList.add("theme-transition");
-    root.setAttribute("data-theme", theme);
-    localStorage.setItem("theme", theme);
-
-    const t = setTimeout(() => root.classList.remove("theme-transition"), 300);
-    return () => clearTimeout(t);
-  }, [theme]);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -68,14 +55,11 @@ const Signup = () => {
 
   return (
     <div className="auth-split">
-      <div className="auth-theme-switch">
-        <ThemeSwitch theme={theme} setTheme={setTheme} />
-      </div>
 
       <div className="auth-card" style={{ maxWidth: '600px' }}>
-        <div className="auth-brand">
+        <div className="auth-brand" onClick={() => navigate("/")} style={{ cursor: "pointer" }}>
           <img src={logo} alt="As You Wish" className="auth-logo" />
-          <h2 className="auth-title">Create Your Account</h2>
+          <h2 className="auth-title">As You Wish</h2>
           <p className="auth-subtitle">Join and personalize your AI experience</p>
         </div>
 
