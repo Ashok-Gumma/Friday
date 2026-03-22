@@ -4,7 +4,9 @@ const userSchema = new Schema(
   {
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
+    password: { type: String, required: function() { return !this.googleId; } },
+    googleId: { type: String, unique: true, sparse: true },
+    avatar: { type: String },
     hobbies: { type: [String], default: [] },
     strengths: { type: [String], default: [] },
     weaknesses: { type: [String], default: [] },

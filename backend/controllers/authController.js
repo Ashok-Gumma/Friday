@@ -78,3 +78,107 @@ export async function login(req, res) {
     res.status(500).json({ message: err.message });
   }
 }
+
+import { OAuth2Client } from "google-auth-library";
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+export async function googleLogin(req, res) {
+  try {
+    const { token } = req.body;
+    const ticket = await client.verifyIdToken({
+      idToken: token,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+
+    const { name, email, picture, sub: googleId } = ticket.getPayload();
+
+    let user = await User.findOne({ email });
+
+    if (!user) {
+      user = new User({
+        name,
+        email,
+        googleId,
+        avatar: picture,
+      });
+      await user.save();
+    } else if (!user.googleId) {
+      user.googleId = googleId;
+      user.avatar = picture;
+      await user.save();
+    }
+
+    const jwtToken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "7d",
+    });
+
+    res.json({
+      token: jwtToken,
+      profile: {
+        name: user.name,
+        email: user.email,
+        avatar: user.avatar,
+        hobbies: user.hobbies,
+        strengths: user.strengths,
+        weaknesses: user.weaknesses,
+      },
+    });
+  } catch (err) {
+    console.error("❌ Google Login error:", err.message);
+    res.status(500).json({ message: "Google Authentication failed" });
+  }
+}
+
+export async function updateProfile(req, res) {
+  try {
+    const { strengths, weaknesses, hobbies } = req.body;
+    const user = await User.findById(req.userId);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    if (strengths) user.strengths = strengths;
+    if (weaknesses) user.weaknesses = weaknesses;
+    if (hobbies) user.hobbies = hobbies;
+
+    await user.save();
+
+    res.json({
+      message: "Profile updated successfully",
+      profile: {
+        name: user.name,
+        email: user.email,
+        avatar: user.avatar,
+        hobbies: user.hobbies,
+        strengths: user.strengths,
+        weaknesses: user.weaknesses,
+      },
+    });
+  } catch (err) {
+    console.error("❌ Update profile error:", err.message);
+    res.status(500).json({ message: err.message });
+  }
+}
+
+export async function getProfile(req, res) {
+  try {
+    const user = await User.findById(req.userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.json({
+      profile: {
+        name: user.name,
+        email: user.email,
+        avatar: user.avatar,
+        hobbies: user.hobbies,
+        strengths: user.strengths,
+        weaknesses: user.weaknesses,
+      },
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+}
+

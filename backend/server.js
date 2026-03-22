@@ -18,6 +18,13 @@ const __dirname = path.dirname(__filename);
 app.use(cors());
 app.use(express.json());
 
+// Add COOP header to allow Google OAuth popups
+app.use((req, res, next) => {
+  res.setHeader("Cross-Origin-Opener-Policy", "same-origin-allow-popups");
+  next();
+});
+
+
 // API routes
 app.use("/api/auth", authRoutes);
 app.use("/api/chat", chatRoutes);

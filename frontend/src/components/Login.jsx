@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
+import { GoogleLogin } from "@react-oauth/google";
 import ThemeSwitch from "./ThemeSwitch";
 
 import logoBg from "../assets/as-you-wish-logo.png";
@@ -36,6 +37,19 @@ const Login = () => {
       navigate("/chat");
     } catch {
       setError("Invalid email or password");
+    }
+  };
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    try {
+      const res = await axios.post("/api/auth/google", {
+        token: credentialResponse.credential,
+      });
+      localStorage.setItem("token", res.data.token);
+      localStorage.setItem("userProfile", JSON.stringify(res.data.profile));
+      navigate("/chat");
+    } catch (err) {
+      setError("Google Login failed");
     }
   };
 
@@ -76,6 +90,21 @@ const Login = () => {
           <button className="auth-button" type="submit">Login</button>
         </form>
 
+        <div className="auth-divider">
+          <span>OR</span>
+        </div>
+
+        <div className="google-login-container">
+          <GoogleLogin
+            onSuccess={handleGoogleSuccess}
+            onError={() => setError("Google Login failed")}
+            useOneTap
+            theme={theme === "dark" ? "filled_blue" : "outline"}
+            shape="pill"
+            width="100%"
+          />
+        </div>
+
         <div className="auth-footer">
           Don’t have an account? <Link to="/signup">Sign up</Link>
         </div>
@@ -83,5 +112,6 @@ const Login = () => {
     </div>
   );
 };
+
 
 export default Login;
