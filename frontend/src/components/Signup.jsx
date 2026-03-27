@@ -1,13 +1,14 @@
-import { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
+import { motion } from "framer-motion";
+import { User, Mail, Lock, ArrowRight } from "lucide-react";
 import ProfileSelection from "./ProfileSelection";
-
-import logo from "../assets/white-logo.png";
+import WordScroller from "./WordScroller";
+import logo from "../assets/red-logo.png";
 
 const Signup = () => {
   const navigate = useNavigate();
-
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -19,6 +20,7 @@ const Signup = () => {
 
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const signupWords = ["INITIALIZE", "SYNCHRONIZE", "PROTOCOL", "NEURAL", "biometric", "uplink"];
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -54,59 +56,133 @@ const Signup = () => {
   };
 
   return (
-    <div className="auth-split">
+    <div style={{ 
+      minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center",
+      background: "var(--bg-deep)", padding: "60px 20px", position: "relative", overflow: "hidden"
+    }}>
+      {/* Background Elements */}
+      <div style={{ position: "fixed", inset: 0, zIndex: 0, pointerEvents: "none" }}>
+        <WordScroller words={signupWords} duration={50} top="15%" opacity={0.04} />
+        <WordScroller words={signupWords} duration={70} top="70%" opacity={0.03} />
+      </div>
 
-      <div className="auth-card" style={{ maxWidth: '600px' }}>
-        <div className="auth-brand" onClick={() => navigate("/")} style={{ cursor: "pointer" }}>
-          <img src={logo} alt="As You Wish" className="auth-logo" />
-          <h2 className="auth-title">As You Wish</h2>
-          <p className="auth-subtitle">Join and personalize your AI experience</p>
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.98, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        className="glass"
+        style={{ 
+          width: "100%", maxWidth: "700px", padding: "56px", 
+          boxShadow: "0 40px 100px rgba(0,0,0,0.8)",
+          zIndex: 10, position: "relative"
+        }}
+      >
+        <div style={{ textAlign: "center", marginBottom: "48px", cursor: "pointer" }} onClick={() => navigate("/")}>
+          <motion.img 
+            whileHover={{ scale: 1.1, rotate: -5 }}
+            src={logo} alt="Logo" style={{ width: "48px", marginBottom: "20px" }} 
+          />
+          <h2 style={{ fontSize: "2.5rem", fontWeight: 900, marginBottom: "8px", letterSpacing: "-1.5px" }}>Sign Up</h2>
+          <p style={{ color: "var(--text-secondary)", fontSize: "1.1rem" }}>Initialize your Friday mission profile</p>
         </div>
 
-        {error && <div className="auth-error">{error}</div>}
+        {error && (
+          <motion.div 
+            initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}
+            style={{ 
+              background: "rgba(239, 68, 68, 0.1)", color: "#ef4444", 
+              padding: "16px", borderRadius: "14px", marginBottom: "32px", fontSize: "0.95rem", textAlign: "center",
+              border: "1px solid rgba(239, 68, 68, 0.2)"
+            }}
+          >
+            {error}
+          </motion.div>
+        )}
 
-        <form onSubmit={handleSubmit}>
-          <input
-            className="auth-input"
-            name="name"
-            placeholder="Full Name"
-            value={form.name}
-            onChange={handleChange}
-            required
-          />
-          <input
-            className="auth-input"
-            name="email"
-            type="email"
-            placeholder="Email"
-            value={form.email}
-            onChange={handleChange}
-            required
-          />
-          <input
-            className="auth-input"
-            name="password"
-            type="password"
-            placeholder="Password"
-            value={form.password}
-            onChange={handleChange}
-            required
-            minLength={6}
-          />
+        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
+            <div style={{ position: "relative" }}>
+              <User size={20} style={{ position: "absolute", left: "18px", top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)" }} />
+              <input
+                className="auth-input-premium"
+                style={{ 
+                  width: "100%", padding: "16px 18px 16px 54px", borderRadius: "14px", 
+                  background: "rgba(255,255,255,0.02)", border: "1px solid var(--glass-border)",
+                  color: "#fff", outline: "none", transition: "var(--transition-fast)",
+                  fontSize: "1rem"
+                }}
+                name="name"
+                placeholder="Full Name"
+                value={form.name}
+                onChange={handleChange}
+                required
+              />
+            </div>
+            <div style={{ position: "relative" }}>
+              <Mail size={20} style={{ position: "absolute", left: "18px", top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)" }} />
+              <input
+                className="auth-input-premium"
+                style={{ 
+                  width: "100%", padding: "16px 18px 16px 54px", borderRadius: "14px", 
+                  background: "rgba(255,255,255,0.02)", border: "1px solid var(--glass-border)",
+                  color: "#fff", outline: "none", transition: "var(--transition-fast)",
+                  fontSize: "1rem"
+                }}
+                name="email"
+                type="email"
+                placeholder="Email address"
+                value={form.email}
+                onChange={handleChange}
+                required
+              />
+            </div>
+          </div>
 
-          <div className="auth-profile-section" style={{ textAlign: "left" }}>
+          <div style={{ position: "relative" }}>
+            <Lock size={20} style={{ position: "absolute", left: "18px", top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)" }} />
+            <input
+              className="auth-input-premium"
+              style={{ 
+                width: "100%", padding: "16px 18px 16px 54px", borderRadius: "14px", 
+                background: "rgba(255,255,255,0.02)", border: "1px solid var(--glass-border)",
+                color: "#fff", outline: "none", transition: "var(--transition-fast)",
+                fontSize: "1rem"
+              }}
+              name="password"
+              type="password"
+              placeholder="Secure Password"
+              value={form.password}
+              onChange={handleChange}
+              required
+              minLength={6}
+            />
+          </div>
+
+          <div className="glass" style={{ padding: "32px", marginTop: "12px", background: "rgba(255,255,255,0.01)" }}>
+            <h4 style={{ fontSize: "1rem", fontWeight: 800, marginBottom: "24px", display: "flex", alignItems: "center", gap: "10px" }}>
+              <span style={{ color: "var(--accent)", background: "var(--accent-subtle)", padding: "4px 10px", borderRadius: "8px" }}>01</span> 
+              NEURAL CALIBRATION
+            </h4>
             <ProfileSelection selections={form} onSelect={handleSelect} />
           </div>
 
-          <button className="auth-button" type="submit" disabled={loading}>
-            {loading ? "Creating Account..." : "Sign Up"}
+          <button 
+            type="submit" 
+            className="btn-primary" 
+            disabled={loading}
+            style={{ 
+              width: "100%", marginTop: "24px", padding: "18px",
+              display: "flex", alignItems: "center", justifyContent: "center", gap: "12px",
+              fontSize: "1.1rem", fontWeight: 800
+            }}
+          >
+            {loading ? "Signing up..." : "Sign Up"} <ArrowRight size={22} />
           </button>
         </form>
 
-        <div className="auth-footer">
-          Already have an account? <Link to="/login">Login</Link>
-        </div>
-      </div>
+        <p style={{ marginTop: "40px", textAlign: "center", fontSize: "1rem", color: "var(--text-secondary)" }}>
+          Already integrated? <Link to="/login" style={{ color: "var(--accent)", fontWeight: 700, textDecoration: "none" }}>Sync Identity</Link>
+        </p>
+      </motion.div>
     </div>
   );
 };

@@ -1,8 +1,11 @@
 import { Router } from "express";
-import { chatWithAI } from "../controllers/chatController.js";
+import { chatWithAI, getChatHistory, clearChatHistory } from "../controllers/chatController.js";
+import { protect } from "../lib/auth.js";
 
 const router = Router();
 
-router.post("/", chatWithAI);
+router.post("/", protect, chatWithAI);
+router.get("/history", protect, getChatHistory);
+router.delete("/clear", protect, clearChatHistory);
 
 export default router;

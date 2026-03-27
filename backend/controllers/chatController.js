@@ -1,9 +1,4 @@
-import OpenAI from "openai";
-
-// Create client using API key from .env
-const client = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+import Message from "../models/Message.js";
 
 // Mood → instruction mapping
 const moodPrompts = {
@@ -20,14 +15,18 @@ const moodPrompts = {
 export const chatWithAI = async (req, res) => {
   try {
     const { message, mood, profile } = req.body;
+    const userId = req.userId;
 
     if (!message) {
       return res.status(400).json({ message: "Message is required" });
     }
 
+    // Save user message
+    await Message.create({ userId, content: message, type: "user" });
+
     const moodInstruction = moodPrompts[mood] || "Be friendly and helpful.";
 
-    // Optional personalization using profile
+    // Optional personalization
     let personalization = "";
     if (profile?.hobbies?.length) {
       personalization += `The user likes ${profile.hobbies.join(", ")}. `;
@@ -39,34 +38,70 @@ export const chatWithAI = async (req, res) => {
       personalization += `Their weaknesses are ${profile.weaknesses.join(", ")}. `;
     }
 
-    // Call OpenAI
-    const response = await client.responses.create({
-      model: "gpt-5-nano", // or "gpt-4o-mini"
-      input: [
-        {
-          role: "system",
-          content: `You are a funny, cool AI chat buddy.
+    // Fetch recent history
+    const history = await Message.find({ userId }).sort({ createdAt: -1 }).limit(6);
+    const context = history.reverse().map(m => ({
+      role: m.type === "user" ? "user" : "assistant",
+      content: m.content
+    }));
+
+    // Call Llama via RapidAPI
+    const response = await fetch('https://open-ai21.p.rapidapi.com/conversationllama', {
+      method: "POST",
+      headers: {
+        'x-rapidapi-key': process.env.RAPIDAPI_KEY,
+        'x-rapidapi-host': process.env.RAPIDAPI_HOST,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        messages: [
+          {
+            role: "user",
+            content: `Instruction: You are a funny, cool AI chat buddy.
 ${moodInstruction}
-Reply like a real human texting a friend.
-Keep replies short (1–2 sentences max).
-No long explanations. No essays.
-Be witty, a little playful, and supportive.
-You can use light humor or a small joke if it fits.
+Reply like a real human texting a friend. 
+Keep replies short (1–2 sentences max). 
+No long explanations. No essays. 
+Be witty, a little playful, and supportive. 
 Use simple words. Sound natural, not robotic.
-${personalization}`,
-        },
-        {
-          role: "user",
-          content: message,
-        },
-      ],
+${personalization}`
+          },
+          ...context,
+          { role: "user", content: message }
+        ],
+        web_access: false
+      })
     });
 
-    const reply = response.output_text;
+    const data = await response.json();
+    
+    // Extract reply from 'result' field for this specific API
+    const reply = data.result || "Neural link saturation reached. Try again.";
+
+    // Save AI reply
+    await Message.create({ userId, content: reply, type: "ai" });
 
     res.json({ reply });
   } catch (err) {
-    console.error("AI error:", err);
-    res.status(500).json({ message: "AI failed to respond" });
+    console.error("Llama AI error:", err);
+    res.status(500).json({ message: "AI response system offline" });
+  }
+};
+
+export const getChatHistory = async (req, res) => {
+  try {
+    const messages = await Message.find({ userId: req.userId }).sort({ createdAt: 1 });
+    res.json(messages);
+  } catch (err) {
+    res.status(500).json({ message: "Failed to fetch history" });
+  }
+};
+
+export const clearChatHistory = async (req, res) => {
+  try {
+    await Message.deleteMany({ userId: req.userId });
+    res.json({ message: "History cleared successfully" });
+  } catch (err) {
+    res.status(500).json({ message: "Failed to clear history" });
   }
 };
