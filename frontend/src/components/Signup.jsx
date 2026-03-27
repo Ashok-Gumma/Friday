@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
+import { GoogleLogin } from "@react-oauth/google";
 import { motion } from "framer-motion";
 import { User, Mail, Lock, ArrowRight } from "lucide-react";
 import ProfileSelection from "./ProfileSelection";
@@ -52,6 +53,19 @@ const Signup = () => {
     } catch (err) {
       setError(err.response?.data?.message || "Signup failed");
       setLoading(false);
+    }
+  };
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    try {
+      const res = await axios.post("/api/auth/google", {
+        token: credentialResponse.credential,
+      });
+      localStorage.setItem("token", res.data.token);
+      localStorage.setItem("userProfile", JSON.stringify(res.data.profile));
+      navigate("/chat");
+    } catch (err) {
+      setError("Google Signup failed");
     }
   };
 
@@ -178,6 +192,21 @@ const Signup = () => {
             {loading ? "Signing up..." : "Sign Up"} <ArrowRight size={22} />
           </button>
         </form>
+
+        <div style={{ margin: "32px 0", display: "flex", alignItems: "center", gap: "12px" }}>
+          <div style={{ flex: 1, height: "1px", background: "var(--glass-border)" }} />
+          <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: 700, letterSpacing: "1px" }}>SECURE SIGNUP</span>
+          <div style={{ flex: 1, height: "1px", background: "var(--glass-border)" }} />
+        </div>
+
+        <div style={{ display: "flex", justifyContent: "center", filter: "grayscale(1) brightness(1.2)" }}>
+          <GoogleLogin
+            onSuccess={handleGoogleSuccess}
+            onError={() => setError("Google Signup failed")}
+            theme="filled_black"
+            shape="pill"
+          />
+        </div>
 
         <p style={{ marginTop: "40px", textAlign: "center", fontSize: "1rem", color: "var(--text-secondary)" }}>
           Already integrated? <Link to="/login" style={{ color: "var(--accent)", fontWeight: 700, textDecoration: "none" }}>Sync Identity</Link>
