@@ -80,7 +80,7 @@ const Profile = () => {
     <div style={{ 
       minHeight: "100vh", background: "#000", color: "#fff", 
       display: "flex", flexDirection: "column", position: "relative", overflow: "hidden",
-      fontFamily: "'Inter', sans-serif"
+      fontFamily: "'General Sans', sans-serif"
     }}>
       {/* Exact Reference Background */}
       <div style={{ 

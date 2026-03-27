@@ -17,7 +17,8 @@ const MoodPrompt = ({ onMoodSelect }) => {
   return (
     <div style={{ 
       height: "100vh", display: "flex", alignItems: "center", justifyContent: "center",
-      background: "#000", position: "relative", overflow: "hidden"
+      background: "#000", position: "relative", overflow: "hidden",
+      fontFamily: "'General Sans', sans-serif"
     }}>
       <div style={{ 
         position: "fixed", inset: 0, zIndex: 0, 

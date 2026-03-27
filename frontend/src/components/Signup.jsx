@@ -3,9 +3,8 @@ import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 import { GoogleLogin } from "@react-oauth/google";
 import { motion } from "framer-motion";
-import { User, Mail, Lock, ArrowRight } from "lucide-react";
+import { User, Mail, Lock, ArrowRight, ChevronLeft } from "lucide-react";
 import ProfileSelection from "./ProfileSelection";
-import WordScroller from "./WordScroller";
 import logo from "../assets/red-logo.png";
 
 const Signup = () => {
@@ -21,7 +20,6 @@ const Signup = () => {
 
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const signupWords = ["INITIALIZE", "SYNCHRONIZE", "PROTOCOL", "NEURAL", "biometric", "uplink"];
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -72,40 +70,56 @@ const Signup = () => {
   return (
     <div style={{ 
       minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center",
-      background: "var(--bg-deep)", padding: "60px 20px", position: "relative", overflow: "hidden"
+      background: "#000", padding: "60px 20px", position: "relative", overflow: "hidden",
+      fontFamily: "'General Sans', sans-serif"
     }}>
-      {/* Background Elements */}
+      {/* Fullscreen Video Background */}
       <div style={{ position: "fixed", inset: 0, zIndex: 0, pointerEvents: "none" }}>
-        <WordScroller words={signupWords} duration={50} top="15%" opacity={0.04} />
-        <WordScroller words={signupWords} duration={70} top="70%" opacity={0.03} />
+        <video autoPlay muted loop playsInline style={{ width: "100%", height: "100%", objectFit: "cover", opacity: 0.4 }}>
+          <source src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260217_030345_246c0224-10a4-422c-b324-070b7c0eceda.mp4" type="video/mp4" />
+        </video>
+        <div style={{ position: "absolute", inset: 0, backgroundColor: "rgba(0, 0, 0, 0.7)" }} />
       </div>
 
       <motion.div 
         initial={{ opacity: 0, scale: 0.98, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        className="glass"
         style={{ 
-          width: "100%", maxWidth: "700px", padding: "56px", 
+          width: "100%", maxWidth: "680px", padding: "56px", 
+          background: "rgba(20, 20, 20, 0.8)",
+          borderRadius: "32px",
+          border: "1px solid rgba(255,255,255,0.1)",
           boxShadow: "0 40px 100px rgba(0,0,0,0.8)",
-          zIndex: 10, position: "relative"
+          zIndex: 10, position: "relative",
+          textAlign: "center"
         }}
       >
-        <div style={{ textAlign: "center", marginBottom: "48px", cursor: "pointer" }} onClick={() => navigate("/")}>
-          <motion.img 
-            whileHover={{ scale: 1.1, rotate: -5 }}
-            src={logo} alt="Logo" style={{ width: "48px", marginBottom: "20px" }} 
-          />
-          <h2 style={{ fontSize: "2.5rem", fontWeight: 900, marginBottom: "8px", letterSpacing: "-1.5px" }}>Sign Up</h2>
-          <p style={{ color: "var(--text-secondary)", fontSize: "1.1rem" }}>Initialize your Friday mission profile</p>
+        <button 
+          onClick={() => navigate("/")}
+          style={{ 
+            position: "absolute", top: "24px", left: "24px", background: "none", border: "none", 
+            color: "rgba(255,255,255,0.4)", cursor: "pointer", display: "flex", alignItems: "center", gap: "5px",
+            fontSize: "13px", fontWeight: 500
+          }}
+        >
+          <ChevronLeft size={16} /> Back
+        </button>
+
+        <div style={{ textAlign: "center", marginBottom: "40px" }}>
+          <div style={{ background: "rgba(255,255,255,0.05)", padding: "12px", borderRadius: "16px", display: "inline-block", marginBottom: "20px", border: "1px solid rgba(255,255,255,0.1)" }}>
+            <img src={logo} alt="Logo" style={{ width: "32px", height: "32px" }} />
+          </div>
+          <h2 style={{ fontSize: "2.5rem", fontWeight: 700, marginBottom: "8px", letterSpacing: "-1px", color: "#fff" }}>Sync Identity</h2>
+          <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "1rem" }}>Initialize your Friday mission profile</p>
         </div>
 
         {error && (
           <motion.div 
             initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}
             style={{ 
-              background: "rgba(239, 68, 68, 0.1)", color: "#ef4444", 
+              background: "rgba(255, 77, 77, 0.1)", color: "#ff4d4d", 
               padding: "16px", borderRadius: "14px", marginBottom: "32px", fontSize: "0.95rem", textAlign: "center",
-              border: "1px solid rgba(239, 68, 68, 0.2)"
+              border: "1px solid rgba(255, 77, 77, 0.2)"
             }}
           >
             {error}
@@ -113,37 +127,37 @@ const Signup = () => {
         )}
 
         <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "24px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
             <div style={{ position: "relative" }}>
-              <User size={20} style={{ position: "absolute", left: "18px", top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)" }} />
+              <User size={18} style={{ position: "absolute", left: "16px", top: "50%", transform: "translateY(-50%)", color: "rgba(255,255,255,0.3)" }} />
               <input
-                className="auth-input-premium"
                 style={{ 
-                  width: "100%", padding: "16px 18px 16px 54px", borderRadius: "14px", 
-                  background: "rgba(255,255,255,0.02)", border: "1px solid var(--glass-border)",
-                  color: "#fff", outline: "none", transition: "var(--transition-fast)",
-                  fontSize: "1rem"
+                  width: "100%", padding: "14px 16px 14px 48px", borderRadius: "14px", 
+                  background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.1)",
+                  color: "#fff", outline: "none", transition: "all 0.2s ease",
+                  fontSize: "0.95rem"
                 }}
+                className="auth-input-premium"
                 name="name"
-                placeholder="Full Name"
+                placeholder="Name"
                 value={form.name}
                 onChange={handleChange}
                 required
               />
             </div>
             <div style={{ position: "relative" }}>
-              <Mail size={20} style={{ position: "absolute", left: "18px", top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)" }} />
+              <Mail size={18} style={{ position: "absolute", left: "16px", top: "50%", transform: "translateY(-50%)", color: "rgba(255,255,255,0.3)" }} />
               <input
-                className="auth-input-premium"
                 style={{ 
-                  width: "100%", padding: "16px 18px 16px 54px", borderRadius: "14px", 
-                  background: "rgba(255,255,255,0.02)", border: "1px solid var(--glass-border)",
-                  color: "#fff", outline: "none", transition: "var(--transition-fast)",
-                  fontSize: "1rem"
+                  width: "100%", padding: "14px 16px 14px 48px", borderRadius: "14px", 
+                  background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.1)",
+                  color: "#fff", outline: "none", transition: "all 0.2s ease",
+                  fontSize: "0.95rem"
                 }}
+                className="auth-input-premium"
                 name="email"
                 type="email"
-                placeholder="Email address"
+                placeholder="Email"
                 value={form.email}
                 onChange={handleChange}
                 required
@@ -152,15 +166,15 @@ const Signup = () => {
           </div>
 
           <div style={{ position: "relative" }}>
-            <Lock size={20} style={{ position: "absolute", left: "18px", top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)" }} />
+            <Lock size={18} style={{ position: "absolute", left: "16px", top: "50%", transform: "translateY(-50%)", color: "rgba(255,255,255,0.3)" }} />
             <input
-              className="auth-input-premium"
               style={{ 
-                width: "100%", padding: "16px 18px 16px 54px", borderRadius: "14px", 
-                background: "rgba(255,255,255,0.02)", border: "1px solid var(--glass-border)",
-                color: "#fff", outline: "none", transition: "var(--transition-fast)",
-                fontSize: "1rem"
+                width: "100%", padding: "14px 16px 14px 48px", borderRadius: "14px", 
+                background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.1)",
+                color: "#fff", outline: "none", transition: "all 0.2s ease",
+                fontSize: "0.95rem"
               }}
+              className="auth-input-premium"
               name="password"
               type="password"
               placeholder="Secure Password"
@@ -171,10 +185,13 @@ const Signup = () => {
             />
           </div>
 
-          <div className="glass" style={{ padding: "32px", marginTop: "12px", background: "rgba(255,255,255,0.01)" }}>
-            <h4 style={{ fontSize: "1rem", fontWeight: 800, marginBottom: "24px", display: "flex", alignItems: "center", gap: "10px" }}>
-              <span style={{ color: "var(--accent)", background: "var(--accent-subtle)", padding: "4px 10px", borderRadius: "8px" }}>01</span> 
-              NEURAL CALIBRATION
+          <div style={{ 
+            padding: "24px", background: "rgba(255,255,255,0.02)", 
+            borderRadius: "20px", border: "1px solid rgba(255,255,255,0.05)",
+            textAlign: "left"
+          }}>
+            <h4 style={{ fontSize: "12px", fontWeight: 700, marginBottom: "20px", color: "#ff4d4d", letterSpacing: "1px", textTransform: "uppercase" }}>
+              01 / Neural Calibration
             </h4>
             <ProfileSelection selections={form} onSelect={handleSelect} />
           </div>
@@ -184,32 +201,31 @@ const Signup = () => {
             className="btn-primary" 
             disabled={loading}
             style={{ 
-              width: "100%", marginTop: "24px", padding: "18px",
-              display: "flex", alignItems: "center", justifyContent: "center", gap: "12px",
-              fontSize: "1.1rem", fontWeight: 800
+              width: "100%", marginTop: "10px", padding: "16px",
+              fontSize: "1.1rem", fontWeight: 600
             }}
           >
-            {loading ? "Signing up..." : "Sign Up"} <ArrowRight size={22} />
+            {loading ? "Initializing..." : "Create Identity"} <ArrowRight size={20} />
           </button>
         </form>
 
-        <div style={{ margin: "32px 0", display: "flex", alignItems: "center", gap: "12px" }}>
-          <div style={{ flex: 1, height: "1px", background: "var(--glass-border)" }} />
-          <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: 700, letterSpacing: "1px" }}>SECURE SIGNUP</span>
-          <div style={{ flex: 1, height: "1px", background: "var(--glass-border)" }} />
+        <div style={{ margin: "24px 0", display: "flex", alignItems: "center", gap: "12px" }}>
+          <div style={{ flex: 1, height: "1px", background: "rgba(255,255,255,0.1)" }} />
+          <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.2)", fontWeight: 700, letterSpacing: "1px" }}>OR SIGNUP WITH</span>
+          <div style={{ flex: 1, height: "1px", background: "rgba(255,255,255,0.1)" }} />
         </div>
 
-        <div style={{ display: "flex", justifyContent: "center", filter: "grayscale(1) brightness(1.2)" }}>
+        <div style={{ display: "flex", justifyContent: "center" }}>
           <GoogleLogin
             onSuccess={handleGoogleSuccess}
             onError={() => setError("Google Signup failed")}
             theme="filled_black"
-            shape="pill"
+            shape="circle"
           />
         </div>
 
-        <p style={{ marginTop: "40px", textAlign: "center", fontSize: "1rem", color: "var(--text-secondary)" }}>
-          Already integrated? <Link to="/login" style={{ color: "var(--accent)", fontWeight: 700, textDecoration: "none" }}>Sync Identity</Link>
+        <p style={{ marginTop: "40px", fontSize: "14px", color: "rgba(255,255,255,0.4)" }}>
+          Already integrated? <Link to="/login" style={{ color: "#ff4d4d", fontWeight: 600, textDecoration: "none" }}>Sync Identity</Link>
         </p>
       </motion.div>
     </div>

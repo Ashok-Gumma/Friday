@@ -21,17 +21,17 @@ function App() {
     <GoogleOAuthProvider clientId={googleClientId}>
       <PageTransition>
         <Routes>
-          <Route path="/" element={<Home  />} />
-          <Route path="/login" element={<Login  />} />
-          <Route path="/signup" element={<Signup  />} />
+          <Route path="/" element={<Home />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
           <Route path="/chat" element={
             <ProtectedRoute>
-              <Chat  />
+              <Chat />
             </ProtectedRoute>
           } />
           <Route path="/profile" element={
             <ProtectedRoute>
-              <Profile  />
+              <Profile />
             </ProtectedRoute>
           } />
           <Route path="*" element={<Navigate to="/" replace />} />

@@ -1,25 +1,27 @@
+@import url('https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600,700&display=swap');
+
 /* Global reset + font */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  font-family: inherit;
+  font-family: 'General Sans', system-ui, -apple-system, sans-serif;
 }
 
 :root {
   /* Core Colors */
-  --bg-deep: #050505;
+  --bg-deep: #000000;
   --bg-dark: #0a0a0a;
   --bg-card: rgba(20, 20, 20, 0.7);
   --text-primary: #ffffff;
   --text-secondary: #a1a1aa;
   --text-muted: #71717a;
   
-  /* Accent Colors */
-  --accent: #00f2ff;
-  --accent-glow: rgba(0, 242, 255, 0.3);
-  --accent-subtle: rgba(0, 242, 255, 0.1);
-  --purple-accent: #8b5cf6;
+  /* Accent Colors (Friday Red) */
+  --accent: #ff4d4d;
+  --accent-glow: rgba(255, 77, 77, 0.4);
+  --accent-subtle: rgba(255, 77, 77, 0.1);
+  --purple-accent: #ff4d4d; /* Unified for now */
   --gold-accent: #f59e0b;
 
   /* Glassmorphism */
@@ -37,34 +39,28 @@
   --transition-smooth: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* Hide Scrollbar */
+::-webkit-scrollbar {
+  display: none;
+}
+* {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 html, body {
   margin: 0;
   padding: 0;
   overflow-x: hidden;
   background: var(--bg-deep);
   color: var(--text-primary);
-  font-family: "Inter", "Outfit", system-ui, -apple-system, sans-serif;
+  font-family: 'General Sans', system-ui, -apple-system, sans-serif;
   scroll-behavior: smooth;
 }
 
 body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-}
-
-/* Custom Scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
-}
-::-webkit-scrollbar-track {
-  background: var(--bg-deep);
-}
-::-webkit-scrollbar-thumb {
-  background: #333;
-  border-radius: 10px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: var(--accent);
 }
 
 /* Selection */
@@ -90,17 +86,24 @@ body {
 
 .btn-primary {
   background: var(--accent);
-  color: #000;
+  color: #fff;
   font-weight: 600;
   padding: 12px 24px;
-  border-radius: 12px;
+  border-radius: 9999px;
   transition: var(--transition-smooth);
-  box-shadow: 0 0 20px var(--accent-glow);
+  box-shadow: 0 4px 15px var(--accent-glow);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
 .btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 0 30px var(--accent-glow);
+  box-shadow: 0 8px 25px var(--accent-glow);
+  background: #ff3333;
 }
 
 .auth-input-premium:focus {

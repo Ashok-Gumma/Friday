@@ -1,10 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
 import { GoogleLogin } from "@react-oauth/google";
 import { motion } from "framer-motion";
-import { Mail, Lock, ArrowRight } from "lucide-react";
-import WordScroller from "./WordScroller";
+import { Mail, Lock, ArrowRight, ChevronLeft } from "lucide-react";
 import logo from "../assets/red-logo.png";
 
 const Login = () => {
@@ -12,8 +11,6 @@ const Login = () => {
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-
-  const loginWords = ["AUTHENTICATE", "AUTHORIZE", "ENCRYPT", "SYNCHRONIZE", "neural", "terminal"];
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -51,60 +48,76 @@ const Login = () => {
   return (
     <div style={{ 
       minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center",
-      background: "var(--bg-deep)", padding: "20px", position: "relative", overflow: "hidden"
+      background: "#000", padding: "20px", position: "relative", overflow: "hidden",
+      fontFamily: "'General Sans', sans-serif"
     }}>
-      {/* Background Elements */}
+      {/* Fullscreen Video Background */}
       <div style={{ position: "fixed", inset: 0, zIndex: 0, pointerEvents: "none" }}>
-        <WordScroller words={loginWords} duration={40} top="10%" opacity={0.05} />
-        <WordScroller words={loginWords} duration={60} top="60%" opacity={0.03} />
+        <video autoPlay muted loop playsInline style={{ width: "100%", height: "100%", objectFit: "cover", opacity: 0.4 }}>
+          <source src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260217_030345_246c0224-10a4-422c-b324-070b7c0eceda.mp4" type="video/mp4" />
+        </video>
+        <div style={{ position: "absolute", inset: 0, backgroundColor: "rgba(0, 0, 0, 0.7)" }} />
       </div>
 
       <motion.div 
-        initial={{ opacity: 0, y: 20, scale: 0.98 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        className="glass"
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
         style={{ 
-          width: "100%", maxWidth: "450px", padding: "48px", 
-          textAlign: "center", boxShadow: "0 40px 100px rgba(0,0,0,0.8)",
-          zIndex: 10, position: "relative"
+          width: "100%", maxWidth: "440px", padding: "48px", 
+          background: "rgba(20, 20, 20, 0.8)",
+          borderRadius: "32px",
+          border: "1px solid rgba(255,255,255,0.1)",
+          boxShadow: "0 40px 100px rgba(0,0,0,0.8)",
+          zIndex: 10, position: "relative",
+          textAlign: "center"
         }}
       >
-        <div style={{ marginBottom: "40px", cursor: "pointer" }} onClick={() => navigate("/")}>
-          <motion.img 
-            whileHover={{ scale: 1.1, rotate: 5 }}
-            src={logo} alt="Logo" style={{ width: "56px", marginBottom: "20px" }} 
-          />
-          <h2 style={{ fontSize: "2rem", fontWeight: 900, marginBottom: "8px", letterSpacing: "-1px" }}>Welcome Back</h2>
-          <p style={{ color: "var(--text-secondary)", fontSize: "1rem" }}>Login to your Friday command center</p>
+        <button 
+          onClick={() => navigate("/")}
+          style={{ 
+            position: "absolute", top: "24px", left: "24px", background: "none", border: "none", 
+            color: "rgba(255,255,255,0.4)", cursor: "pointer", display: "flex", alignItems: "center", gap: "5px",
+            fontSize: "13px", fontWeight: 500
+          }}
+        >
+          <ChevronLeft size={16} /> Back
+        </button>
+
+        <div style={{ marginBottom: "40px" }}>
+          <div style={{ background: "rgba(255,255,255,0.05)", padding: "12px", borderRadius: "16px", display: "inline-block", marginBottom: "20px", border: "1px solid rgba(255,255,255,0.1)" }}>
+            <img src={logo} alt="Logo" style={{ width: "32px", height: "32px" }} />
+          </div>
+          <h2 style={{ fontSize: "2rem", fontWeight: 700, marginBottom: "8px", letterSpacing: "-0.5px", color: "#fff" }}>Welcome Home</h2>
+          <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.95rem" }}>Authenticate your identity to continue.</p>
         </div>
 
         {error && (
           <motion.div 
-            initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }}
+            initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
             style={{ 
-              background: "rgba(239, 68, 68, 0.1)", color: "#ef4444", 
-              padding: "16px", borderRadius: "12px", marginBottom: "24px", fontSize: "0.95rem",
-              border: "1px solid rgba(239, 68, 68, 0.2)"
+              background: "rgba(255, 77, 77, 0.1)", color: "#ff4d4d", 
+              padding: "12px", borderRadius: "12px", marginBottom: "24px", fontSize: "0.9rem",
+              border: "1px solid rgba(255, 77, 77, 0.2)"
             }}
           >
             {error}
           </motion.div>
         )}
 
-        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
           <div style={{ position: "relative" }}>
-            <Mail size={20} style={{ position: "absolute", left: "18px", top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)" }} />
+            <Mail size={18} style={{ position: "absolute", left: "16px", top: "50%", transform: "translateY(-50%)", color: "rgba(255,255,255,0.3)" }} />
             <input
               style={{ 
-                width: "100%", padding: "16px 18px 16px 54px", borderRadius: "14px", 
-                background: "rgba(255,255,255,0.02)", border: "1px solid var(--glass-border)",
-                color: "#fff", outline: "none", transition: "var(--transition-fast)",
-                fontSize: "1rem"
+                width: "100%", padding: "14px 16px 14px 48px", borderRadius: "14px", 
+                background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.1)",
+                color: "#fff", outline: "none", transition: "all 0.2s ease",
+                fontSize: "0.95rem"
               }}
               className="auth-input-premium"
               name="email"
               type="email"
-              placeholder="Email address"
+              placeholder="Email"
               value={form.email}
               onChange={handleChange}
               required
@@ -112,14 +125,15 @@ const Login = () => {
           </div>
           
           <div style={{ position: "relative" }}>
-            <Lock size={20} style={{ position: "absolute", left: "18px", top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)" }} />
+            <Lock size={18} style={{ position: "absolute", left: "16px", top: "50%", transform: "translateY(-50%)", color: "rgba(255,255,255,0.3)" }} />
             <input
               style={{ 
-                width: "100%", padding: "16px 18px 16px 54px", borderRadius: "14px", 
-                background: "rgba(255,255,255,0.02)", border: "1px solid var(--glass-border)",
-                color: "#fff", outline: "none", transition: "var(--transition-fast)",
-                fontSize: "1rem"
+                width: "100%", padding: "14px 16px 14px 48px", borderRadius: "14px", 
+                background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.1)",
+                color: "#fff", outline: "none", transition: "all 0.2s ease",
+                fontSize: "0.95rem"
               }}
+              className="auth-input-premium"
               name="password"
               type="password"
               placeholder="Password"
@@ -134,32 +148,31 @@ const Login = () => {
             className="btn-primary" 
             disabled={isLoading}
             style={{ 
-              width: "100%", marginTop: "12px", padding: "16px",
-              display: "flex", alignItems: "center", justifyContent: "center", gap: "10px",
-              fontSize: "1.1rem", fontWeight: 700
+              width: "100%", marginTop: "10px", padding: "14px",
+              fontSize: "1rem", fontWeight: 600
             }}
           >
-            {isLoading ? "Logging in..." : "Login"} <ArrowRight size={20} />
+            {isLoading ? "Authenticating..." : "Login to Friday"} <ArrowRight size={18} />
           </button>
         </form>
 
-        <div style={{ margin: "32px 0", display: "flex", alignItems: "center", gap: "12px" }}>
-          <div style={{ flex: 1, height: "1px", background: "var(--glass-border)" }} />
-          <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", fontWeight: 700, letterSpacing: "1px" }}>SECURE ACCESS</span>
-          <div style={{ flex: 1, height: "1px", background: "var(--glass-border)" }} />
+        <div style={{ margin: "24px 0", display: "flex", alignItems: "center", gap: "12px" }}>
+          <div style={{ flex: 1, height: "1px", background: "rgba(255,255,255,0.1)" }} />
+          <span style={{ fontSize: "11px", color: "rgba(255,255,255,0.2)", fontWeight: 700, letterSpacing: "1px" }}>OR CONTINUE WITH</span>
+          <div style={{ flex: 1, height: "1px", background: "rgba(255,255,255,0.1)" }} />
         </div>
 
-        <div style={{ display: "flex", justifyContent: "center", filter: "grayscale(1) brightness(1.2)" }}>
+        <div style={{ display: "flex", justifyContent: "center" }}>
           <GoogleLogin
             onSuccess={handleGoogleSuccess}
             onError={() => setError("Google Login failed")}
             theme="filled_black"
-            shape="pill"
+            shape="circle"
           />
         </div>
 
-        <p style={{ marginTop: "40px", fontSize: "1rem", color: "var(--text-secondary)" }}>
-          New to the mission? <Link to="/signup" style={{ color: "var(--accent)", fontWeight: 700, textDecoration: "none" }}>Create Account</Link>
+        <p style={{ marginTop: "32px", fontSize: "14px", color: "rgba(255,255,255,0.4)" }}>
+          New here? <Link to="/signup" style={{ color: "#ff4d4d", fontWeight: 600, textDecoration: "none" }}>Create access profile</Link>
         </p>
       </motion.div>
     </div>
