@@ -101,7 +101,7 @@ const Profile = () => {
           style={{ display: "flex", alignItems: "center", gap: "12px", cursor: "pointer", opacity: 0.8 }}
         >
           <img src={logo} alt="Logo" style={{ width: "20px" }} />
-          <h2 style={{ fontSize: "0.85rem", fontWeight: 800, letterSpacing: "2px", color: "#ff4d4d", textShadow: "0 0 10px rgba(255, 77, 77, 0.3)" }}>FRIDAY</h2>
+          <h2 style={{ fontSize: "0.85rem", fontWeight: 800, letterSpacing: "2px", color: "#ff4d4d", textShadow: "0 0 10px rgba(255, 77, 77, 0.3)" }}>Friday</h2>
         </div>
         <button 
           onClick={() => navigate("/chat")}
@@ -185,7 +185,7 @@ const Profile = () => {
       </main>
 
       <footer style={{ padding: "40px", textAlign: "center", opacity: 0.3, fontSize: "0.7rem", letterSpacing: "1px" }}>
-        NEURAL INTERFACE v2.0 • FRIDAY CORE
+        NEURAL INTERFACE v2.0 • Friday Core
       </footer>
 
       <style>{`

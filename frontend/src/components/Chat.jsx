@@ -215,7 +215,7 @@ const Chat = () => {
       >
         <div style={{ padding: "32px 24px", display: "flex", alignItems: "center", gap: "12px" }}>
           <img src={logo} alt="Logo" style={{ width: "22px" }} />
-          <h2 style={{ fontSize: "0.9rem", fontWeight: 800, letterSpacing: "1px", color: "#ff4d4d", textShadow: "0 0 10px rgba(255, 77, 77, 0.3)" }}>FRIDAY</h2>
+          <h2 style={{ fontSize: "0.9rem", fontWeight: 800, letterSpacing: "1px", color: "#ff4d4d", textShadow: "0 0 10px rgba(255, 77, 77, 0.3)" }}>Friday</h2>
         </div>
 
         <div style={{ flex: 1, padding: "0 24px 24px", display: "flex", flexDirection: "column", gap: "32px" }}>
