@@ -78,7 +78,7 @@ const Signup = () => {
   return (
     <div style={{ 
       minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center",
-      background: "#000", padding: "60px 20px", position: "relative", overflow: "hidden",
+      background: "#000", padding: "100px 20px", position: "relative",
       fontFamily: "'General Sans', sans-serif"
     }}>
       {/* Fullscreen Video Background */}
@@ -136,7 +136,7 @@ const Signup = () => {
         )}
 
         <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
+          <div className="signup-grid">
             <div style={{ position: "relative" }}>
               <User size={18} style={{ position: "absolute", left: "16px", top: "50%", transform: "translateY(-50%)", color: "rgba(255,255,255,0.3)" }} />
               <input

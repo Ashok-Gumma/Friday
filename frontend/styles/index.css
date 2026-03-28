@@ -39,7 +39,7 @@
   --transition-smooth: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Hide Scrollbar */
+/* Hide Scrollbar while keeping functionality (Lenis) */
 ::-webkit-scrollbar {
   display: none;
 }
@@ -48,14 +48,36 @@
   scrollbar-width: none;
 }
 
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+.lenis.lenis-scrolling iframe {
+  pointer-events: none;
+}
+
 html, body {
   margin: 0;
   padding: 0;
   overflow-x: hidden;
+  overflow-y: auto;
   background: var(--bg-deep);
   color: var(--text-primary);
   font-family: 'General Sans', system-ui, -apple-system, sans-serif;
-  scroll-behavior: smooth;
+  scroll-behavior: auto; /* Lenis handles smoothing */
 }
 
 body {
@@ -110,6 +132,18 @@ body {
   border-color: var(--accent) !important;
   box-shadow: 0 0 10px var(--accent-glow);
   background: rgba(255, 255, 255, 0.05) !important;
+}
+
+.signup-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+@media (max-width: 640px) {
+  .signup-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* Animations */

@@ -55,7 +55,7 @@ const Login = () => {
   return (
     <div style={{ 
       minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center",
-      background: "#000", padding: "20px", position: "relative", overflow: "hidden",
+      background: "#000", padding: "40px 20px", position: "relative",
       fontFamily: "'General Sans', sans-serif"
     }}>
       {/* Fullscreen Video Background */}

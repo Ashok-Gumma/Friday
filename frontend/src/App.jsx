@@ -10,6 +10,7 @@ import Signup from "./components/Signup.jsx";
 import Chat from "./components/Chat.jsx";
 import Profile from "./pages/Profile.jsx";
 import PageTransition from "./components/PageTransition.jsx";
+import SmoothScroll from "./components/SmoothScroll.jsx";
 
 import { LoadingProvider, useLoading } from "./context/LoadingContext.jsx";
 
@@ -61,7 +62,9 @@ const AppContent = () => {
 function App() {
   return (
     <LoadingProvider>
-      <AppContent />
+      <SmoothScroll>
+        <AppContent />
+      </SmoothScroll>
     </LoadingProvider>
   );
 }
