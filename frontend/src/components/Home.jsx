@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { motion, useScroll, useSpring, useTransform } from "framer-motion";
+import { motion } from "framer-motion";
 import { Cpu, Zap, Shield, Sparkles, Globe, Command } from "lucide-react";
 import logo from "../assets/red-logo.png";
 import FridayLogo from "./FridayLogo.jsx";
@@ -9,75 +9,7 @@ import FridayLogo from "./FridayLogo.jsx";
 /**
  * SmoothScroll - A wrapper that intercepts native scroll and animates a content container.
  */
-const SmoothScroll = ({ children }) => {
-  const contentRef = useRef(null);
-  const [contentHeight, setContentHeight] = useState(0);
 
-  // Get the native scroll position
-  const { scrollY } = useScroll();
-
-  // Create a spring-smoothed version of the scroll position
-  const smoothY = useSpring(scrollY, {
-    damping: 25,
-    stiffness: 100,
-    mass: 0.5,
-    restDelta: 0.001
-  });
-
-  // Transform the smooth scroll into a translateY for the content
-  const y = useTransform(smoothY, (value) => -value);
-
-  useEffect(() => {
-    if (!contentRef.current) return;
-
-    const updateHeight = () => {
-      if (contentRef.current) {
-        // Use offsetHeight as it's generally more stable for height measurement
-        setContentHeight(contentRef.current.offsetHeight);
-      }
-    };
-
-    const resizeObserver = new ResizeObserver(updateHeight);
-    resizeObserver.observe(contentRef.current);
-
-    // Initial check
-    updateHeight();
-
-    return () => resizeObserver.disconnect();
-  }, [children]);
-
-  return (
-    <>
-      <motion.div
-        ref={contentRef}
-        style={{
-          y,
-          position: "fixed",
-          top: 0,
-          left: 0,
-          right: 0,
-          width: "100%",
-          willChange: "transform",
-          zIndex: 10,
-          overflow: "hidden" // Prevent internal scrolling
-        }}
-      >
-        {children}
-      </motion.div>
-      
-      {/* Invisible spacer to enable native scroll height - absolute to avoid horizontal scrollbar */}
-      <div style={{ 
-        height: contentHeight,
-        width: "1px",
-        position: "absolute",
-        top: 0,
-        left: 0,
-        pointerEvents: "none",
-        opacity: 0
-      }} />
-    </>
-  );
-};
 
 /**
  * CustomPill - A reusable pill container with layered construction and glow effect.
@@ -148,7 +80,7 @@ const Home = () => {
         overflowX: "hidden",
       }}
     >
-      {/* Fullscreen Video Background */}
+      {/* Cinematic Background Layer */}
       <div
         style={{
           position: "fixed",
@@ -156,7 +88,8 @@ const Home = () => {
           zIndex: 0,
           width: "100%",
           height: "100%",
-          pointerEvents: "none"
+          pointerEvents: "none",
+          backgroundColor: "#000",
         }}
       >
         <video
@@ -168,7 +101,9 @@ const Home = () => {
             width: "100%",
             height: "100%",
             objectFit: "cover",
-            willChange: "transform"
+            filter: "contrast(1.05) brightness(0.8) saturate(1.1)",
+            willChange: "transform",
+            opacity: 0.9
           }}
         >
           <source
@@ -176,60 +111,69 @@ const Home = () => {
             type="video/mp4"
           />
         </video>
-        {/* Base Black Overlay - Reduced to 30% for better visibility */}
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            backgroundColor: "rgba(0, 0, 0, 0.3)",
-            zIndex: 1
-          }}
-        />
 
-        {/* Dynamic Colorful Gradient Overlay */}
+        {/* Natural Lens Falloff (Vignette) */}
+        <div style={{
+          position: "absolute",
+          inset: 0,
+          zIndex: 2,
+          background: "radial-gradient(circle at center, transparent 20%, rgba(0,0,0,0.2) 60%, rgba(0,0,0,0.6) 100%)",
+          pointerEvents: "none"
+        }} />
+
+        {/* Global Darkening for Readability */}
+        <div style={{
+          position: "absolute",
+          inset: 0,
+          zIndex: 1,
+          backgroundColor: "rgba(0, 0, 0, 0.2)",
+          pointerEvents: "none"
+        }} />
+
+        {/* Atmospheric Light Leaks */}
         <motion.div
           animate={{
             background: [
-              "radial-gradient(circle at 20% 30%, rgba(255, 77, 77, 0.15) 0%, transparent 50%)",
-              "radial-gradient(circle at 80% 70%, rgba(255, 77, 77, 0.15) 0%, transparent 50%)",
-              "radial-gradient(circle at 20% 30%, rgba(255, 77, 77, 0.15) 0%, transparent 50%)",
+              "radial-gradient(circle at 10% 20%, rgba(255, 255, 255, 0.03) 0%, transparent 60%)",
+              "radial-gradient(circle at 90% 80%, rgba(255, 255, 255, 0.03) 0%, transparent 60%)",
+              "radial-gradient(circle at 10% 20%, rgba(255, 255, 255, 0.03) 0%, transparent 60%)",
             ]
           }}
           transition={{
-            duration: 10,
+            duration: 15,
             repeat: Infinity,
-            ease: "linear"
+            ease: "easeInOut"
           }}
           style={{
             position: "absolute",
             inset: 0,
-            zIndex: 2,
+            zIndex: 3,
             pointerEvents: "none"
           }}
         />
 
-        {/* Subtle Shifting Linear Gradient */}
+        {/* Subtle Shifting Light Stream */}
         <motion.div
           animate={{
             x: ["-100%", "100%"]
           }}
           transition={{
-            duration: 15,
+            duration: 25,
             repeat: Infinity,
             ease: "linear"
           }}
           style={{
             position: "absolute",
             inset: 0,
-            background: "linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.03), transparent)",
-            zIndex: 3,
+            background: "linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.01), transparent)",
+            zIndex: 4,
             pointerEvents: "none"
           }}
         />
       </div>
 
 
-      <SmoothScroll>
+
         <div style={{ position: "relative", zIndex: 10 }}>
           {/* Navbar */}
           <header
@@ -237,30 +181,31 @@ const Home = () => {
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
-              padding: "20px 120px",
+              padding: "clamp(20px, 4vw, 32px) clamp(20px, 8vw, 120px)",
+              width: "100%",
             }}
             className="navbar-responsive"
           >
             <motion.div 
               initial={{ x: -20, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
-              style={{ display: "flex", alignItems: "center", gap: "10px", cursor: "pointer" }} 
+              style={{ display: "flex", alignItems: "center", gap: "10px", cursor: "pointer", flexShrink: 0 }} 
               onClick={() => navigate("/")}
             >
-              <FridayLogo size="1.3rem" />
+              <FridayLogo size="clamp(1.1rem, 3vw, 1.3rem)" />
             </motion.div>
 
 
             {/* Right Side: Auth Links */}
-            <div style={{ display: "flex", gap: "12px" }}>
+            <div style={{ display: "flex", gap: "clamp(8px, 2vw, 12px)", flexShrink: 0 }}>
               <Link to="/login" style={{ textDecoration: "none" }}>
-                <CustomPill variant="dark">
-                  <span style={{ fontSize: "14px", fontWeight: 500, color: "#fff" }}>Login</span>
+                <CustomPill variant="dark" style={{ padding: "0.4px" }}>
+                  <span style={{ fontSize: "clamp(12px, 2vw, 14px)", fontWeight: 500, color: "#fff", padding: "8px 20px" }}>Login</span>
                 </CustomPill>
               </Link>
               <Link to="/signup" style={{ textDecoration: "none" }}>
-                <CustomPill variant="light">
-                  <span style={{ fontSize: "14px", fontWeight: 500, color: "#000" }}>Sign Up</span>
+                <CustomPill variant="light" style={{ padding: "0.4px" }}>
+                  <span style={{ fontSize: "clamp(12px, 2vw, 14px)", fontWeight: 500, color: "#000", padding: "8px 20px" }}>Sign Up</span>
                 </CustomPill>
               </Link>
             </div>
@@ -273,8 +218,10 @@ const Home = () => {
               flexDirection: "column",
               alignItems: "center",
               textAlign: "center",
-              paddingTop: "280px",
-              paddingBottom: "102px",
+              paddingTop: "clamp(160px, 25vh, 280px)",
+              paddingBottom: "clamp(60px, 10vh, 102px)",
+              paddingLeft: "20px",
+              paddingRight: "20px",
             }}
             className="hero-responsive"
           >
@@ -290,11 +237,11 @@ const Home = () => {
                 borderRadius: "20px",
                 background: "rgba(255, 255, 255, 0.1)",
                 border: "1px solid rgba(255, 255, 255, 0.2)",
-                marginBottom: "40px",
+                marginBottom: "clamp(24px, 5vh, 40px)",
               }}
             >
               <div style={{ width: "4px", height: "4px", borderRadius: "50%", background: "#ff4d4d", boxShadow: "0 0 10px #ff4d4d" }} />
-              <span style={{ fontSize: "13px", fontWeight: 500, color: "rgba(255, 255, 255, 0.6)" }}>
+              <span style={{ fontSize: "clamp(11px, 2vw, 13px)", fontWeight: 500, color: "rgba(255, 255, 255, 0.6)" }}>
                 Neural Synchronization
                 <span style={{ color: "#fff" }}> v1.0 Private Beta</span>
               </span>
@@ -306,12 +253,12 @@ const Home = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
               style={{
-                fontSize: "56px",
+                fontSize: "clamp(32px, 8vw, 56px)",
                 fontWeight: 500,
-                lineHeight: 1.28,
+                lineHeight: 1.2,
                 maxWidth: "800px",
                 marginBottom: "24px",
-                background: "linear-gradient(144.5deg, #ffffff 28%, rgba(255, 255, 255, 0.1) 115%)",
+                background: "linear-gradient(144.5deg, #ffffff 28%, rgba(255, 255, 255, 0.4) 115%)",
                 WebkitBackgroundClip: "text",
                 backgroundClip: "text",
                 WebkitTextFillColor: "transparent",
@@ -327,12 +274,12 @@ const Home = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
               style={{
-                fontSize: "15px",
+                fontSize: "clamp(14px, 2.5vw, 15px)",
                 fontWeight: 400,
                 color: "rgba(255, 255, 255, 0.7)",
                 maxWidth: "680px",
                 lineHeight: 1.6,
-                margin: "0 auto 40px",
+                margin: "0 auto clamp(24px, 5vh, 40px)",
               }}
             >
               Experience the future of human-AI collaboration. Friday adapts to your unique workflow, 
@@ -348,26 +295,26 @@ const Home = () => {
             >
               <Link to="/signup" style={{ textDecoration: "none" }}>
                 <CustomPill variant="light">
-                  <span style={{ fontSize: "14px", fontWeight: 500, color: "#000" }}>Get Started Now</span>
+                  <span style={{ fontSize: "clamp(13px, 2vw, 14px)", fontWeight: 600, color: "#000" }}>Get Started Now</span>
                 </CustomPill>
               </Link>
             </motion.div>
           </section>
 
           {/* Project Features Section */}
-          <section style={{ padding: "120px 5%", background: "transparent" }}>
+          <section style={{ padding: "clamp(60px, 15vh, 120px) 5%", background: "transparent" }}>
             <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
               <motion.div 
                 initial={{ opacity: 0 }}
                 whileInView={{ opacity: 1 }}
                 viewport={{ once: true }}
-                style={{ textAlign: "center", marginBottom: "80px" }}
+                style={{ textAlign: "center", marginBottom: "clamp(40px, 10vh, 80px)" }}
               >
-                <h2 style={{ fontSize: "3rem", fontWeight: 500, marginBottom: "20px", background: "linear-gradient(to bottom, #fff, rgba(255,255,255,0.4))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>AI Command Core</h2>
-                <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "1.1rem" }}>Advanced neural infrastructure for high-performance sensory immersion.</p>
+                <h2 style={{ fontSize: "clamp(2rem, 6vw, 3rem)", fontWeight: 500, marginBottom: "20px", background: "linear-gradient(to bottom, #fff, rgba(255,255,255,0.4))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>AI Command Core</h2>
+                <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "clamp(0.9rem, 2vw, 1.1rem)" }}>Advanced neural infrastructure for high-performance sensory immersion.</p>
               </motion.div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "24px" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "clamp(16px, 3vw, 24px)" }}>
                 <FeatureCard 
                   delay={0}
                   icon={<Cpu size={24} />} 
@@ -398,10 +345,10 @@ const Home = () => {
 
           {/* Global Footer */}
           <footer style={{ 
-            textAlign: "center", padding: "180px 20px 80px", 
+            textAlign: "center", padding: "clamp(80px, 20vh, 180px) 20px 80px", 
             borderTop: "1px solid rgba(255,255,255,0.05)" 
           }}>
-            <div style={{ display: "flex", justifyContent: "center", gap: "40px", marginBottom: "30px", color: "rgba(255,255,255,0.3)" }}>
+            <div style={{ display: "flex", justifyContent: "center", gap: "clamp(24px, 6vw, 40px)", marginBottom: "30px", color: "rgba(255,255,255,0.3)" }}>
               <Globe size={20} />
               <Command size={20} />
               <Zap size={20} />
@@ -411,7 +358,7 @@ const Home = () => {
             </p>
           </footer>
         </div>
-      </SmoothScroll>
+
 
       <style>{`
         * {
@@ -425,16 +372,12 @@ const Home = () => {
         }
         @media (max-width: 768px) {
           .navbar-responsive {
-            padding: 20px 40px !important;
-          }
-          .nav-links {
-            display: none !important;
+            justify-content: center !important;
+            flex-direction: column;
+            gap: 16px;
           }
           .hero-responsive {
-            padding-top: 200px !important;
-          }
-          .heading-responsive {
-            font-size: 36px !important;
+            padding-top: 140px !important;
           }
         }
       `}</style>
