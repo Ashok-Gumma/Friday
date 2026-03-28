@@ -5,10 +5,13 @@ import { GoogleLogin } from "@react-oauth/google";
 import { motion } from "framer-motion";
 import { User, Mail, Lock, ArrowRight, ChevronLeft } from "lucide-react";
 import ProfileSelection from "./ProfileSelection";
-import logo from "../assets/red-logo.png";
+import FridayLogo from "./FridayLogo.jsx";
+import { useLoading } from "../context/LoadingContext.jsx";
+
 
 const Signup = () => {
   const navigate = useNavigate();
+  const { triggerLoading } = useLoading();
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -20,6 +23,11 @@ const Signup = () => {
 
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const handleLogoClick = () => {
+    triggerLoading(2000);
+    navigate("/");
+  };
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -95,7 +103,7 @@ const Signup = () => {
         }}
       >
         <button 
-          onClick={() => navigate("/")}
+          onClick={handleLogoClick}
           style={{ 
             position: "absolute", top: "24px", left: "24px", background: "none", border: "none", 
             color: "rgba(255,255,255,0.4)", cursor: "pointer", display: "flex", alignItems: "center", gap: "5px",
@@ -106,9 +114,10 @@ const Signup = () => {
         </button>
 
         <div style={{ textAlign: "center", marginBottom: "40px" }}>
-          <div style={{ background: "rgba(255,255,255,0.05)", padding: "12px", borderRadius: "16px", display: "inline-block", marginBottom: "20px", border: "1px solid rgba(255,255,255,0.1)" }}>
-            <img src={logo} alt="Logo" style={{ width: "32px", height: "32px" }} />
+          <div onClick={handleLogoClick} style={{ marginBottom: "30px", cursor: "pointer" }}>
+            <FridayLogo size="2.5rem" />
           </div>
+
           <h2 style={{ fontSize: "2.5rem", fontWeight: 700, marginBottom: "8px", letterSpacing: "-1px", color: "#fff" }}>Sync Identity</h2>
           <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "1rem" }}>Initialize your Friday mission profile</p>
         </div>

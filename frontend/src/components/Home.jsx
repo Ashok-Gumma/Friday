@@ -3,6 +3,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { motion, useScroll, useSpring, useTransform } from "framer-motion";
 import { Cpu, Zap, Shield, Sparkles, Globe, Command } from "lucide-react";
 import logo from "../assets/red-logo.png";
+import FridayLogo from "./FridayLogo.jsx";
+
 
 /**
  * SmoothScroll - A wrapper that intercepts native scroll and animates a content container.
@@ -174,15 +176,58 @@ const Home = () => {
             type="video/mp4"
           />
         </video>
-        {/* 50% Black Overlay */}
+        {/* Base Black Overlay - Reduced to 30% for better visibility */}
         <div
           style={{
             position: "absolute",
             inset: 0,
-            backgroundColor: "rgba(0, 0, 0, 0.5)",
+            backgroundColor: "rgba(0, 0, 0, 0.3)",
+            zIndex: 1
+          }}
+        />
+
+        {/* Dynamic Colorful Gradient Overlay */}
+        <motion.div
+          animate={{
+            background: [
+              "radial-gradient(circle at 20% 30%, rgba(255, 77, 77, 0.15) 0%, transparent 50%)",
+              "radial-gradient(circle at 80% 70%, rgba(255, 77, 77, 0.15) 0%, transparent 50%)",
+              "radial-gradient(circle at 20% 30%, rgba(255, 77, 77, 0.15) 0%, transparent 50%)",
+            ]
+          }}
+          transition={{
+            duration: 10,
+            repeat: Infinity,
+            ease: "linear"
+          }}
+          style={{
+            position: "absolute",
+            inset: 0,
+            zIndex: 2,
+            pointerEvents: "none"
+          }}
+        />
+
+        {/* Subtle Shifting Linear Gradient */}
+        <motion.div
+          animate={{
+            x: ["-100%", "100%"]
+          }}
+          transition={{
+            duration: 15,
+            repeat: Infinity,
+            ease: "linear"
+          }}
+          style={{
+            position: "absolute",
+            inset: 0,
+            background: "linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.03), transparent)",
+            zIndex: 3,
+            pointerEvents: "none"
           }}
         />
       </div>
+
 
       <SmoothScroll>
         <div style={{ position: "relative", zIndex: 10 }}>
@@ -196,18 +241,15 @@ const Home = () => {
             }}
             className="navbar-responsive"
           >
-            {/* Left Side: Friday Branding */}
             <motion.div 
               initial={{ x: -20, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               style={{ display: "flex", alignItems: "center", gap: "10px", cursor: "pointer" }} 
               onClick={() => navigate("/")}
             >
-              <div style={{ background: "rgba(255,255,255,0.05)", padding: "8px", borderRadius: "10px", backdropFilter: "blur(10px)", border: "1px solid rgba(255,255,255,0.1)" }}>
-                <img src={logo} alt="Logo" style={{ width: "24px", height: "24px" }} />
-              </div>
-              <span style={{ fontSize: "1.2rem", fontWeight: 700, letterSpacing: "1px", color: "#ff4d4d", textShadow: "0 0 10px rgba(255, 77, 77, 0.3)" }}>Friday</span>
+              <FridayLogo size="1.3rem" />
             </motion.div>
+
 
             {/* Right Side: Auth Links */}
             <div style={{ display: "flex", gap: "12px" }}>

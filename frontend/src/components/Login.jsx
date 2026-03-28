@@ -4,13 +4,20 @@ import { useNavigate, Link } from "react-router-dom";
 import { GoogleLogin } from "@react-oauth/google";
 import { motion } from "framer-motion";
 import { Mail, Lock, ArrowRight, ChevronLeft } from "lucide-react";
-import logo from "../assets/red-logo.png";
+import FridayLogo from "./FridayLogo.jsx";
+import { useLoading } from "../context/LoadingContext.jsx";
 
 const Login = () => {
   const navigate = useNavigate();
+  const { triggerLoading } = useLoading();
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+
+  const handleLogoClick = () => {
+    triggerLoading(2000);
+    navigate("/");
+  };
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -73,7 +80,7 @@ const Login = () => {
         }}
       >
         <button 
-          onClick={() => navigate("/")}
+          onClick={handleLogoClick}
           style={{ 
             position: "absolute", top: "24px", left: "24px", background: "none", border: "none", 
             color: "rgba(255,255,255,0.4)", cursor: "pointer", display: "flex", alignItems: "center", gap: "5px",
@@ -84,9 +91,10 @@ const Login = () => {
         </button>
 
         <div style={{ marginBottom: "40px" }}>
-          <div style={{ background: "rgba(255,255,255,0.05)", padding: "12px", borderRadius: "16px", display: "inline-block", marginBottom: "20px", border: "1px solid rgba(255,255,255,0.1)" }}>
-            <img src={logo} alt="Logo" style={{ width: "32px", height: "32px" }} />
+          <div onClick={handleLogoClick} style={{ marginBottom: "30px", cursor: "pointer" }}>
+            <FridayLogo size="2rem" />
           </div>
+
           <h2 style={{ fontSize: "2rem", fontWeight: 700, marginBottom: "8px", letterSpacing: "-0.5px", color: "#fff" }}>Welcome Home</h2>
           <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.95rem" }}>Authenticate your identity to continue.</p>
         </div>

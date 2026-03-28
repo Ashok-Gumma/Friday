@@ -6,6 +6,8 @@ import { ArrowLeft, Save, User as UserIcon, Mail, Shield, Zap, Sparkles } from "
 import ProfileSelection from "../components/ProfileSelection";
 import WordScroller from "../components/WordScroller";
 import logo from "../assets/red-logo.png";
+import FridayLogo from "../components/FridayLogo.jsx";
+
 import chatBg from "../assets/chat-bg.png";
 
 const Profile = () => {
@@ -100,9 +102,9 @@ const Profile = () => {
           onClick={() => navigate("/")} 
           style={{ display: "flex", alignItems: "center", gap: "12px", cursor: "pointer", opacity: 0.8 }}
         >
-          <img src={logo} alt="Logo" style={{ width: "20px" }} />
-          <h2 style={{ fontSize: "0.85rem", fontWeight: 800, letterSpacing: "2px", color: "#ff4d4d", textShadow: "0 0 10px rgba(255, 77, 77, 0.3)" }}>Friday</h2>
+          <FridayLogo size="1.2rem" />
         </div>
+
         <button 
           onClick={() => navigate("/chat")}
           style={{ 

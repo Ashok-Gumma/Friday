@@ -10,6 +10,8 @@ import {
 import MoodPrompt from "./MoodPrompt";
 import WordScroller from "./WordScroller";
 import logo from "../assets/red-logo.png";
+import FridayLogo from "./FridayLogo.jsx";
+
 import chatBg from "../assets/chat-bg.png";
 
 const Chat = () => {
@@ -213,10 +215,10 @@ const Chat = () => {
           flexShrink: 0, position: "relative", zIndex: 100, backdropFilter: "blur(20px)"
         }}
       >
-        <div style={{ padding: "32px 24px", display: "flex", alignItems: "center", gap: "12px" }}>
-          <img src={logo} alt="Logo" style={{ width: "22px" }} />
-          <h2 style={{ fontSize: "0.9rem", fontWeight: 800, letterSpacing: "1px", color: "#ff4d4d", textShadow: "0 0 10px rgba(255, 77, 77, 0.3)" }}>Friday</h2>
+        <div style={{ padding: "32px 24px", display: "flex", alignItems: "center", gap: "12px", cursor: "pointer" }} onClick={() => navigate("/")}>
+          <FridayLogo size="1.2rem" />
         </div>
+
 
         <div style={{ flex: 1, padding: "0 24px 24px", display: "flex", flexDirection: "column", gap: "32px" }}>
           <div>
