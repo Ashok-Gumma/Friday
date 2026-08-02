@@ -1,6 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 
+
 const FridayLogo = ({ size = "1.4rem", color = "#0f172a", showBadge = true }) => {
   return (
     <motion.div

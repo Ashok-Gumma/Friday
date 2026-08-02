@@ -1,6 +1,5 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { GoogleOAuthProvider } from "@react-oauth/google";
 import { AnimatePresence } from "framer-motion";
 
 import PageLoader from "./components/PageLoader.jsx";
@@ -22,7 +21,6 @@ const ProtectedRoute = ({ children }) => {
 
 const AppContent = () => {
   const { isLoading, triggerLoading } = useLoading();
-  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
   useEffect(() => {
     // Initial mount loading
@@ -30,7 +28,7 @@ const AppContent = () => {
   }, []);
 
   return (
-    <GoogleOAuthProvider clientId={googleClientId}>
+    <>
       <AnimatePresence mode="wait">
         {isLoading && <PageLoader key="loader" />}
       </AnimatePresence>
@@ -55,7 +53,7 @@ const AppContent = () => {
           </Routes>
         </PageTransition>
       )}
-    </GoogleOAuthProvider>
+    </>
   );
 };
 

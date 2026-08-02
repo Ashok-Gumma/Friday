@@ -1,6 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { Compass, Sparkles, Target, Check } from "lucide-react";
+import { Compass, Zap, Target, Check } from "lucide-react";
 
 const options = {
   hobbies: {
@@ -13,7 +13,7 @@ const options = {
   },
   strengths: {
     label: "Your Strengths",
-    icon: <Sparkles size={16} color="#facc15" />,
+    icon: <Zap size={16} color="#d97706" fill="#facc15" />,
     items: [
       "Rapid Learning", "Problem Solving", "Strategic Thinking", "Deep Focus", 
       "Data Analysis", "Empathy", "Leadership", "Adaptability", 
@@ -38,6 +38,11 @@ const ProfileSelection = ({ selections, onSelect }) => {
         const catObj = options[category];
         const selectedList = selections[category] || [];
 
+        // Include any user-saved items that might not be in the default list
+        const displayItems = Array.from(
+          new Set([...catObj.items, ...selectedList])
+        );
+
         return (
           <div key={category} style={{ textAlign: "left" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "12px" }}>
@@ -58,13 +63,21 @@ const ProfileSelection = ({ selections, onSelect }) => {
                 color: selectedList.length > 0 ? "#78350f" : "#64748b",
                 fontWeight: 800 
               }}>
-                {selectedList.length} selected
+                {selectedList.length > 0 ? `${selectedList.length} selected` : "Not selected anything"}
               </span>
             </div>
 
+            {selectedList.length === 0 && (
+              <p style={{ fontSize: "0.8rem", color: "#94a3b8", fontStyle: "italic", marginBottom: "10px" }}>
+                Not selected anything yet. Click below to add.
+              </p>
+            )}
+
             <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
-              {catObj.items.map((item) => {
-                const selected = selectedList.includes(item);
+              {displayItems.map((item) => {
+                const selected = selectedList.some(
+                  (s) => String(s).trim().toLowerCase() === String(item).trim().toLowerCase()
+                );
 
                 return (
                   <motion.button

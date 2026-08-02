@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Save, User as UserIcon, Shield, Sparkles, Activity, Check } from "lucide-react";
+import { ArrowLeft, Save, User as UserIcon, Shield, Zap, Activity, Check } from "lucide-react";
 import ProfileSelection from "../components/ProfileSelection";
 import FridayLogo from "../components/FridayLogo.jsx";
 
@@ -58,12 +58,18 @@ const Profile = () => {
   };
 
   const handleSelect = (category, value) => {
-    setProfile((prev) => ({
-      ...prev,
-      [category]: prev[category].includes(value)
-        ? prev[category].filter((v) => v !== value)
-        : [...prev[category], value],
-    }));
+    setProfile((prev) => {
+      const list = prev[category] || [];
+      const exists = list.some(
+        (v) => String(v).trim().toLowerCase() === String(value).trim().toLowerCase()
+      );
+      return {
+        ...prev,
+        [category]: exists
+          ? list.filter((v) => String(v).trim().toLowerCase() !== String(value).trim().toLowerCase())
+          : [...list, value],
+      };
+    });
   };
 
   if (loading) return (
@@ -141,7 +147,7 @@ const Profile = () => {
 
           {/* Quick Metrics Bar */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "14px", marginBottom: "36px" }}>
-            <StatCard icon={<Sparkles size={18} />} label="Strengths Selected" value={profile?.strengths?.length || 0} />
+            <StatCard icon={<Zap size={18} fill="#78350f" />} label="Strengths Selected" value={profile?.strengths?.length || 0} />
             <StatCard icon={<Shield size={18} />} label="Growth Areas" value={profile?.weaknesses?.length || 0} />
             <StatCard icon={<Activity size={18} />} label="Hobbies Added" value={profile?.hobbies?.length || 0} />
           </div>
