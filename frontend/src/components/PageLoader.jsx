@@ -1,19 +1,37 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import FridayLogo from "./FridayLogo";
+
+const statusSteps = [
+  "Starting Friday...",
+  "Setting up your workspace...",
+  "Loading your preferences...",
+  "Ready to help!"
+];
 
 const PageLoader = () => {
+  const [stepIndex, setStepIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setStepIndex((prev) => (prev < statusSteps.length - 1 ? prev + 1 : prev));
+    }, 400);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <motion.div
       initial={{ opacity: 1 }}
       exit={{ 
-        y: "-100%",
-        transition: { duration: 0.8, ease: [0.76, 0, 0.24, 1], delay: 1.2 } 
+        opacity: 0,
+        scale: 0.98,
+        transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } 
       }}
       style={{
         position: "fixed",
         inset: 0,
-        zIndex: 9999,
-        backgroundColor: "#000000", // Changed from Orange to Black
+        zIndex: 99999,
+        backgroundColor: "#faf9f5",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -21,59 +39,70 @@ const PageLoader = () => {
         overflow: "hidden"
       }}
     >
-      <div style={{ position: "relative", display: "flex", alignItems: "flex-start" }}>
-        <motion.h1
-          initial={{ y: 100, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.8, ease: [0.21, 1, 0.36, 1], delay: 0.2 }}
-          style={{
-            fontSize: "clamp(1.5rem, 6vw, 4rem)", // Reduced size again
-            fontWeight: 400, // Bebas Neue is bold by default
-            color: "#ff4d4d",
-            textTransform: "uppercase",
-            letterSpacing: "0.05em",
-            margin: 0,
-            lineHeight: 1,
-            fontFamily: "'Bebas Neue', sans-serif",
-          }}
-
-        >
-          FRIDAY
-        </motion.h1>
-        <motion.span
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.8 }}
-          style={{
-            fontSize: "clamp(0.6rem, 2vw, 1.5rem)", // Reduced size proportionally
-            fontWeight: 400,
-            color: "#ff4d4d", // Changed from Black to Red
-            marginLeft: "6px",
-            marginTop: "6px"
-          }}
-        >
-          ®
-        </motion.span>
-
-      </div>
-      
-      {/* Subtle progress indicator or accent */}
-      <motion.div
-        initial={{ scaleX: 0 }}
-        animate={{ scaleX: 1 }}
-        transition={{ duration: 1, ease: "easeInOut", delay: 0.2 }}
+      {/* Background Glow */}
+      <div 
         style={{
           position: "absolute",
-          bottom: "10%",
-          left: "10%",
-          right: "10%",
-          height: "2px",
-          background: "rgba(0,0,0,0.1)",
-          originX: 0
+          width: "350px",
+          height: "350px",
+          borderRadius: "50%",
+          background: "radial-gradient(circle, rgba(250,204,21,0.25) 0%, transparent 70%)",
+          filter: "blur(50px)",
+          pointerEvents: "none"
         }}
       />
+
+      <div style={{ position: "relative", marginBottom: "28px" }}>
+        <FridayLogo size="2.2rem" showDot={true} color="#0f172a" />
+      </div>
+
+      {/* Status Text Animation */}
+      <motion.p
+        key={stepIndex}
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -8 }}
+        transition={{ duration: 0.25 }}
+        style={{
+          color: "#0f172a",
+          fontSize: "0.95rem",
+          fontWeight: 800,
+          height: "20px",
+          textAlign: "center",
+          fontFamily: "'Inter', sans-serif"
+        }}
+      >
+        {statusSteps[stepIndex]}
+      </motion.p>
+
+      {/* Progress Bar Container */}
+      <div 
+        style={{
+          width: "200px",
+          height: "4px",
+          background: "rgba(0, 0, 0, 0.08)",
+          borderRadius: "999px",
+          overflow: "hidden",
+          marginTop: "20px",
+          position: "relative"
+        }}
+      >
+        <motion.div
+          initial={{ x: "-100%" }}
+          animate={{ x: "0%" }}
+          transition={{ duration: 1.5, ease: "easeInOut" }}
+          style={{
+            width: "100%",
+            height: "100%",
+            background: "linear-gradient(90deg, #facc15, #f59e0b)",
+            borderRadius: "999px"
+          }}
+        />
+      </div>
     </motion.div>
   );
 };
 
 export default PageLoader;
+
+

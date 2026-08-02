@@ -3,46 +3,54 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
-  User, Send, Mic, MicOff, Volume2, 
+  User, Send, Mic, Volume2, 
   VolumeX, ChevronDown, LogOut, Settings, 
-  Sparkles, MessageSquare, Shield, Zap 
+  Sparkles, MessageSquare, Shield, Smile,
+  Copy, Check, PanelLeftClose, PanelLeftOpen, Trash2, Heart
 } from "lucide-react";
 import MoodPrompt from "./MoodPrompt";
-import WordScroller from "./WordScroller";
-import logo from "../assets/red-logo.png";
 import FridayLogo from "./FridayLogo.jsx";
 
-import chatBg from "../assets/chat-bg.png";
+const quickPrompts = [
+  "Help me plan a productive morning routine.",
+  "Give me a 2-minute motivational boost.",
+  "What are some smart tips to improve daily focus?",
+  "Help me write a concise follow-up email for my team."
+];
 
 const Chat = () => {
   const navigate = useNavigate();
   const [messages, setMessages] = useState([]);
+  const [todayMood, setTodayMoodState] = useState(() => {
+    return localStorage.getItem("userMood") || "relaxed";
+  });
+  const [showMoodModal, setShowMoodModal] = useState(false);
   const [input, setInput] = useState("");
-  const [todayMood, setTodayMood] = useState(null);
   const [listening, setListening] = useState(false);
   const [voiceReply, setVoiceReply] = useState(true);
   const voiceReplyRef = useRef(true);
   const [isTyping, setIsTyping] = useState(false);
   const [showSidebar, setShowSidebar] = useState(true);
+  const [copiedIndex, setCopiedIndex] = useState(null);
 
   const [voices, setVoices] = useState([]);
   const [selectedVoice, setSelectedVoice] = useState("");
 
   const scrollRef = useRef(null);
   const recognitionRef = useRef(null);
-  const synth = window.speechSynthesis;
+  const synth = typeof window !== "undefined" ? window.speechSynthesis : null;
 
   const profile = JSON.parse(localStorage.getItem("userProfile") || "{}");
-  const chatWords = ["NEURAL", "SYNC", "EXECUTE", "ENCRYPT", "active", "secure"];
 
-  // Protect route
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) navigate("/");
-  }, [navigate]);
+  const handleSetMood = (newMood) => {
+    setTodayMoodState(newMood);
+    localStorage.setItem("userMood", newMood);
+    setShowMoodModal(false);
+  };
 
   // Setup speech recognition
   useEffect(() => {
+    if (typeof window === "undefined") return;
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SpeechRecognition) {
       recognitionRef.current = new SpeechRecognition();
@@ -50,7 +58,6 @@ const Chat = () => {
       recognitionRef.current.interimResults = true;
 
       recognitionRef.current.onstart = () => {
-        console.log("Speech recognition started.");
         setListening(true);
       };
 
@@ -63,21 +70,18 @@ const Chat = () => {
       };
 
       recognitionRef.current.onend = () => {
-        console.log("Speech recognition ended.");
         setListening(false);
       };
 
-      recognitionRef.current.onerror = (event) => {
-        console.error("Speech Recognition Error:", event.error);
+      recognitionRef.current.onerror = () => {
         setListening(false);
       };
-    } else {
-      console.warn("Speech Recognition not supported in this browser.");
     }
   }, []);
 
   // Load voices
   useEffect(() => {
+    if (!synth) return;
     const loadVoices = () => {
       const v = synth.getVoices();
       setVoices(v);
@@ -87,7 +91,7 @@ const Chat = () => {
     synth.onvoiceschanged = loadVoices;
   }, [synth, selectedVoice]);
 
-  // Ultra-smooth auto scroll
+  // Auto scroll
   useLayoutEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
@@ -95,16 +99,11 @@ const Chat = () => {
   }, [messages, isTyping]);
 
   const toggleMic = () => {
-    if (!recognitionRef.current) {
-      console.error("Speech Recognition not initialized");
-      return;
-    }
+    if (!recognitionRef.current) return;
     if (listening) {
-      console.log("User stopped mic recording manually.");
       recognitionRef.current.stop();
     } else {
       try {
-        console.log("Starting speech recognition...");
         setInput("");
         recognitionRef.current.start();
       } catch (err) {
@@ -122,7 +121,11 @@ const Chat = () => {
           const res = await axios.get("/api/chat/history", {
             headers: { Authorization: `Bearer ${token}` },
           });
-          setMessages(res.data.map(m => ({ type: m.type, text: m.content })));
+          setMessages(res.data.map(m => ({ 
+            type: m.type, 
+            text: m.content,
+            time: new Date(m.createdAt || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          })));
         } catch (err) {
           console.error("Failed to load history:", err);
         }
@@ -132,7 +135,7 @@ const Chat = () => {
   }, [todayMood]);
 
   const speakText = (text) => {
-    if (!voiceReplyRef.current) return;
+    if (!voiceReplyRef.current || !synth) return;
     synth.cancel();
     const utter = new SpeechSynthesisUtterance(text);
     const voice = voices.find((v) => v.name === selectedVoice);
@@ -141,7 +144,7 @@ const Chat = () => {
   };
 
   const handleClearHistory = async () => {
-    if (!window.confirm("Are you sure you want to clear your neural log? This cannot be undone.")) return;
+    if (!window.confirm("Are you sure you want to clear your chat history?")) return;
     try {
       const token = localStorage.getItem("token");
       await axios.delete("/api/chat/clear", {
@@ -153,12 +156,12 @@ const Chat = () => {
     }
   };
 
-  const handleSend = async (e) => {
-    if (e) e.preventDefault();
-    if (!input.trim() || isTyping) return;
+  const handleSendText = async (textToSend) => {
+    if (!textToSend.trim() || isTyping) return;
 
-    const userMsg = input.trim();
-    setMessages((prev) => [...prev, { type: "user", text: userMsg }]);
+    const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const userMsg = textToSend.trim();
+    setMessages((prev) => [...prev, { type: "user", text: userMsg, time: timestamp }]);
     setInput("");
     setIsTyping(true);
 
@@ -173,13 +176,29 @@ const Chat = () => {
       });
 
       const aiText = res.data.reply;
+      const aiTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
       setIsTyping(false);
-      setMessages((prev) => [...prev, { type: "ai", text: aiText }]);
+      setMessages((prev) => [...prev, { type: "ai", text: aiText, time: aiTime }]);
       speakText(aiText);
     } catch {
       setIsTyping(false);
-      setMessages((prev) => [...prev, { type: "ai", text: "Neural link interrupted. Please retry." }]);
+      setMessages((prev) => [...prev, { 
+        type: "ai", 
+        text: "I couldn't reach the server just now. Please try again in a moment!",
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      }]);
     }
+  };
+
+  const handleFormSubmit = (e) => {
+    if (e) e.preventDefault();
+    handleSendText(input);
+  };
+
+  const handleCopyMessage = (text, index) => {
+    navigator.clipboard.writeText(text);
+    setCopiedIndex(index);
+    setTimeout(() => setCopiedIndex(null), 2000);
   };
 
   const handleLogout = () => {
@@ -188,150 +207,170 @@ const Chat = () => {
     navigate("/");
   };
 
-  if (!todayMood) return <MoodPrompt onMoodSelect={setTodayMood} />;
-
   return (
     <div style={{ 
-      height: "100vh", display: "flex", background: "#000", 
-      color: "var(--text-primary)", overflow: "hidden", position: "relative",
+      height: "100vh", display: "flex", background: "#faf9f5", 
+      color: "#0f172a", overflow: "hidden", position: "relative",
       fontFamily: "'Inter', sans-serif"
     }}>
-      {/* Immersive Reference Background */}
-      <div style={{ 
-        position: "fixed", inset: 0, zIndex: 0, 
-        backgroundImage: `url(${chatBg})`,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        filter: "brightness(0.9)"
+      {/* Background Ambient Glow */}
+      <div style={{
+        position: "fixed", inset: 0, zIndex: 0, pointerEvents: "none",
+        background: "radial-gradient(circle at 70% 20%, rgba(225, 29, 72, 0.08) 0%, transparent 60%)"
       }} />
-      
-      {/* Sidebar */}
+
+      {/* Retractable Light Glass Sidebar Matching Chat Page */}
       <motion.aside 
         initial={false}
-        animate={{ width: showSidebar ? "320px" : "0px", opacity: showSidebar ? 1 : 0 }}
+        animate={{ width: showSidebar ? "300px" : "0px", opacity: showSidebar ? 1 : 0 }}
+        transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
         style={{ 
-          background: "rgba(0,0,0,0.4)", borderRight: "1px solid rgba(255,255,255,0.05)",
+          background: "#ffffff", 
+          borderRight: "1px solid rgba(234, 179, 8, 0.22)",
           display: "flex", flexDirection: "column", overflow: "hidden", 
-          flexShrink: 0, position: "relative", zIndex: 100, backdropFilter: "blur(20px)"
+          flexShrink: 0, position: "relative", zIndex: 100,
+          boxShadow: "4px 0 25px rgba(0, 0, 0, 0.03)"
         }}
       >
-        <div style={{ padding: "32px 24px", display: "flex", alignItems: "center", gap: "12px", cursor: "pointer" }} onClick={() => navigate("/")}>
-          <FridayLogo size="1.2rem" />
+        <div style={{ padding: "24px 20px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div onClick={() => navigate("/")} style={{ cursor: "pointer" }}>
+            <FridayLogo size="1.3rem" color="#0f172a" />
+          </div>
+          <button
+            onClick={() => setShowSidebar(false)}
+            style={{ background: "none", border: "none", color: "#64748b", cursor: "pointer", transition: "color 0.2s" }}
+            onMouseEnter={(e) => { e.currentTarget.style.color = "#0f172a"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.color = "#64748b"; }}
+          >
+            <PanelLeftClose size={18} />
+          </button>
         </div>
 
-
-        <div style={{ flex: 1, padding: "0 24px 24px", display: "flex", flexDirection: "column", gap: "32px" }}>
+        <div style={{ flex: 1, padding: "0 20px 24px", display: "flex", flexDirection: "column", gap: "24px", overflowY: "auto" }}>
+          {/* User Profile Card */}
           <div>
-            <label style={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.4)", letterSpacing: "1px", textTransform: "uppercase", fontWeight: 700 }}>Active Operator</label>
+            <label style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: 800, display: "block", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "1px" }}>
+              Your Account
+            </label>
             <div style={{ 
-              marginTop: "12px", padding: "16px", borderRadius: "16px",
-              background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)",
-              display: "flex", alignItems: "center", gap: "12px" 
+              padding: "14px 16px", borderRadius: "18px",
+              background: "#faf9f5", border: "1px solid rgba(234, 179, 8, 0.25)",
+              display: "flex", alignItems: "center", gap: "12px",
+              boxShadow: "0 4px 12px rgba(0,0,0,0.02)"
             }}>
               <div style={{ 
-                width: "44px", height: "44px", borderRadius: "12px", 
-                background: "rgba(255,255,255,0.05)", color: "#fff",
-                display: "flex", alignItems: "center", justifyContent: "center"
+                width: "42px", height: "42px", borderRadius: "50%", 
+                background: "linear-gradient(135deg, #facc15 0%, #f59e0b 100%)", color: "#0e0a05",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                boxShadow: "0 4px 14px rgba(250, 204, 21, 0.4)", flexShrink: 0
               }}>
-                <User size={20} />
+                <User size={19} />
               </div>
-              <div>
-                <p style={{ fontSize: "0.95rem", fontWeight: 600 }}>{profile.name || "Operator"}</p>
-                <p style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.5)" }}>{todayMood} Calibration</p>
+              <div style={{ overflow: "hidden", textAlign: "left" }}>
+                <p style={{ fontSize: "0.92rem", fontWeight: 900, color: "#0f172a", whiteSpace: "nowrap", textOverflow: "ellipsis", overflow: "hidden" }}>
+                  {profile.name || "User"}
+                </p>
+                <p style={{ fontSize: "0.78rem", color: "#d97706", fontWeight: 800, textTransform: "capitalize" }}>
+                  {todayMood} Tone Active
+                </p>
               </div>
             </div>
           </div>
 
+          {/* Voice Selector */}
           <div>
-            <label style={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.4)", letterSpacing: "1px", textTransform: "uppercase", fontWeight: 700 }}>Neural Voice</label>
-            <div style={{ marginTop: "12px", position: "relative" }}>
+            <label style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: 800, display: "block", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "1px" }}>
+              Voice Assistant Sound
+            </label>
+            <div style={{ position: "relative" }}>
               <select
                 value={selectedVoice}
                 onChange={(e) => setSelectedVoice(e.target.value)}
                 style={{ 
-                  width: "100%", padding: "14px 18px", borderRadius: "14px", 
-                  background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)",
-                  color: "#fff", outline: "none", fontSize: "0.85rem", appearance: "none"
+                  width: "100%", padding: "10px 32px 10px 14px", borderRadius: "14px", 
+                  background: "#faf9f5", border: "1px solid rgba(0,0,0,0.12)",
+                  color: "#0f172a", outline: "none", fontSize: "0.85rem", appearance: "none",
+                  fontWeight: 600, cursor: "pointer"
                 }}
               >
                 {voices.map((v) => (
-                  <option key={v.name} value={v.name} style={{ background: "#111" }}>
-                    {v.name.substring(0, 30)}
+                  <option key={v.name} value={v.name} style={{ background: "#ffffff", color: "#0f172a" }}>
+                    {v.name.substring(0, 26)}
                   </option>
                 ))}
               </select>
-              <ChevronDown size={14} style={{ position: "absolute", right: "16px", top: "50%", transform: "translateY(-50%)", pointerEvents: "none", opacity: 0.5 }} />
+              <ChevronDown size={14} style={{ position: "absolute", right: "14px", top: "50%", transform: "translateY(-50%)", pointerEvents: "none", color: "#64748b" }} />
             </div>
           </div>
 
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "4px" }}>
-            <span style={{ fontSize: "0.9rem", color: "rgba(255,255,255,0.6)", fontWeight: 500 }}>Audio Feedback</span>
+          {/* Audio Response Toggle */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "4px 0" }}>
+            <span style={{ fontSize: "0.88rem", color: "#0f172a", fontWeight: 700 }}>Audio Responses</span>
             <button 
               onClick={() => {
                 const newValue = !voiceReply;
-                console.log("Audio Feedback Toggled:", newValue ? "ON" : "OFF");
                 setVoiceReply(newValue);
                 voiceReplyRef.current = newValue;
-                if (!newValue) {
-                  console.log("Cancelling active speech...");
-                  synth.cancel();
-                }
+                if (!newValue && synth) synth.cancel();
               }}
               style={{ 
-                width: "48px", height: "24px", borderRadius: "12px", 
-                background: voiceReply ? "#ff4d4d" : "rgba(255,255,255,0.05)",
-                border: "1px solid " + (voiceReply ? "rgba(255, 77, 77, 0.3)" : "rgba(255,255,255,0.1)"),
-                position: "relative", transition: "all 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
-                boxShadow: voiceReply ? "0 0 15px rgba(255, 77, 77, 0.3)" : "none",
-                cursor: "pointer"
+                width: "46px", height: "24px", borderRadius: "999px", 
+                background: voiceReply ? "linear-gradient(135deg, #facc15 0%, #f59e0b 100%)" : "#e2e8f0",
+                border: "1px solid " + (voiceReply ? "#d97706" : "rgba(0,0,0,0.1)"),
+                position: "relative", transition: "all 0.25s ease",
+                cursor: "pointer", boxShadow: voiceReply ? "0 2px 8px rgba(250,204,21,0.4)" : "none"
               }}
             >
               <motion.div 
-                animate={{ x: voiceReply ? 26 : 2 }}
+                animate={{ x: voiceReply ? 24 : 2 }}
+                transition={{ type: "spring", stiffness: 500, damping: 30 }}
                 style={{ 
-                  width: "20px", height: "20px", borderRadius: "50%", 
-                  background: "#fff", 
-                  position: "absolute", top: "1px",
-                  boxShadow: "0 2px 5px rgba(0,0,0,0.2)"
+                  width: "18px", height: "18px", borderRadius: "50%", 
+                  background: "#ffffff", 
+                  position: "absolute", top: "2px",
+                  boxShadow: "0 2px 4px rgba(0,0,0,0.2)"
                 }} 
               />
             </button>
           </div>
         </div>
 
-        <div style={{ padding: "24px", borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+        {/* Sidebar Footer Actions */}
+        <div style={{ padding: "20px", borderTop: "1px solid rgba(234, 179, 8, 0.2)", display: "flex", flexDirection: "column", gap: "10px" }}>
           <button 
             onClick={handleClearHistory}
             style={{ 
-              width: "100%", padding: "14px", borderRadius: "14px", display: "flex", alignItems: "center", gap: "12px", 
-              color: "rgba(255,255,255,0.4)", marginBottom: "8px", background: "transparent", border: "1px solid transparent",
-              transition: "all 0.3s", cursor: "pointer", fontSize: "0.85rem", fontWeight: 600
+              width: "100%", padding: "12px", borderRadius: "14px", display: "flex", alignItems: "center", gap: "10px", 
+              color: "#dc2626", background: "#fef2f2", border: "1px solid rgba(239, 68, 68, 0.2)",
+              transition: "all 0.2s", cursor: "pointer", fontSize: "0.85rem", fontWeight: 700
             }}
-            className="sidebar-action-btn"
           >
-            <Zap size={18} /> Clear Neural Log
+            <Trash2 size={16} /> Clear Chat History
           </button>
+
           <button 
             onClick={() => navigate("/profile")}
             style={{ 
-              width: "100%", padding: "14px", borderRadius: "14px", display: "flex", alignItems: "center", gap: "12px", 
-              color: "rgba(255,255,255,0.4)", marginBottom: "8px", background: "transparent", border: "1px solid transparent",
-              transition: "all 0.3s"
+              width: "100%", padding: "12px", borderRadius: "14px", display: "flex", alignItems: "center", gap: "10px", 
+              color: "#0f172a", background: "#faf9f5", border: "1px solid rgba(0,0,0,0.08)",
+              transition: "all 0.2s", cursor: "pointer", fontSize: "0.85rem", fontWeight: 700
             }}
-            className="sidebar-btn-ref"
+            onMouseEnter={(e) => { e.currentTarget.style.background = "#f1efe7"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = "#faf9f5"; }}
           >
-            <Settings size={18} /> Configuration
+            <Settings size={16} /> Profile & Settings
           </button>
+
           <button 
             onClick={handleLogout}
             style={{ 
-              width: "100%", padding: "14px", borderRadius: "14px", display: "flex", alignItems: "center", gap: "12px", 
-              color: "rgba(255, 77, 77, 0.6)", background: "transparent", border: "1px solid transparent",
-              transition: "all 0.3s"
+              width: "100%", padding: "12px", borderRadius: "14px", display: "flex", alignItems: "center", gap: "10px", 
+              color: "#ffffff", background: "#0f172a", border: "none",
+              transition: "all 0.2s", cursor: "pointer", fontSize: "0.85rem", fontWeight: 800,
+              boxShadow: "0 4px 12px rgba(0,0,0,0.1)"
             }}
-            className="sidebar-btn-ref"
           >
-            <LogOut size={18} /> De-authorize
+            <LogOut size={16} color="#facc15" /> Sign Out
           </button>
         </div>
       </motion.aside>
@@ -339,82 +378,121 @@ const Chat = () => {
       {/* Main Chat Area */}
       <main style={{ flex: 1, display: "flex", flexDirection: "column", position: "relative", zIndex: 10 }}>
         
-        {/* Transparent Header */}
+        {/* Top Header */}
         <header style={{ 
-          padding: "24px 40px", display: "flex", justifyContent: "space-between", alignItems: "center",
+          padding: "18px 28px", display: "flex", justifyContent: "space-between", alignItems: "center",
+          borderBottom: "1px solid rgba(234,179,8,0.2)",
+          background: "rgba(255, 255, 255, 0.85)", backdropFilter: "blur(20px)",
           zIndex: 20 
         }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
-            <button 
-              onClick={() => setShowSidebar(!showSidebar)}
-              style={{ 
-                background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)",
-                width: "42px", height: "42px", borderRadius: "14px", display: "flex", alignItems: "center", justifyContent: "center",
-                color: "rgba(255,255,255,0.8)", backdropFilter: "blur(20px)",
-                boxShadow: "0 4px 15px rgba(0,0,0,0.2)", transition: "all 0.3s cubic-bezier(0.16, 1, 0.3, 1)"
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; e.currentTarget.style.color = "#fff"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.03)"; e.currentTarget.style.color = "rgba(255,255,255,0.8)"; }}
-            >
-              <ChevronDown size={20} style={{ transform: showSidebar ? "rotate(90deg)" : "rotate(-90deg)", transition: "0.3s" }} />
-            </button>
-            <div>
-              <h3 style={{ fontSize: "1.1rem", fontWeight: 700, letterSpacing: "-0.5px" }}>Neural Gateway</h3>
-              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                <div style={{ 
-                  width: "8px", height: "8px", borderRadius: "50%", 
-                  background: listening ? "#ff4d4d" : "#10b981", 
-                  boxShadow: listening ? "0 0 12px #ff4d4d" : "0 0 10px #10b981",
-                  transition: "0.3s"
-                }} />
-                <p style={{ 
-                  fontSize: "0.75rem", 
-                  color: listening ? "#ff4d4d" : "rgba(255,255,255,0.5)", 
-                  fontWeight: 700,
-                  textTransform: "uppercase",
-                  letterSpacing: "1px"
-                }}>
-                  {listening ? "Listening..." : "Operational"}
-                </p>
+          <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+            {!showSidebar && (
+              <button 
+                onClick={() => setShowSidebar(true)}
+                style={{ 
+                  background: "#f1efe7", border: "1px solid rgba(0,0,0,0.08)",
+                  width: "36px", height: "36px", borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "center",
+                  color: "#0f172a", cursor: "pointer", transition: "all 0.2s"
+                }}
+              >
+                <PanelLeftOpen size={18} />
+              </button>
+            )}
+            <div style={{ textAlign: "left" }}>
+              <h3 style={{ fontSize: "1.05rem", fontWeight: 900, letterSpacing: "-0.3px", display: "flex", alignItems: "center", gap: "8px", color: "#0f172a" }}>
+                Friday AI <span style={{ fontSize: "0.72rem", color: "#78350f", padding: "2px 10px", borderRadius: "999px", background: "#fef08a", border: "1px solid rgba(234,179,8,0.4)", fontWeight: 800 }}>ONLINE</span>
+              </h3>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "2px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+                  <span style={{ 
+                    width: "6px", height: "6px", borderRadius: "50%", 
+                    background: listening ? "#d97706" : "#10b981", 
+                    boxShadow: listening ? "0 0 10px #facc15" : "0 0 8px #10b981",
+                  }} />
+                  <span style={{ 
+                    fontSize: "0.75rem", 
+                    color: listening ? "#d97706" : "#64748b", 
+                    fontWeight: 700
+                  }}>
+                    {listening ? "Listening to you..." : "Ready to help"}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-             <div style={{ 
-               padding: "10px 20px", borderRadius: "30px", fontSize: "0.8rem", fontWeight: 700,
-               background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)",
-               color: "#fff"
-             }}>
-               {todayMood}
-             </div>
-          </div>
+
+          {/* Tone Switcher Pill in Top Right Header */}
+          <button
+            onClick={() => setShowMoodModal(true)}
+            style={{
+              display: "flex", alignItems: "center", gap: "8px",
+              padding: "7px 16px", borderRadius: "999px",
+              background: "#faf9f5", border: "1px solid rgba(234, 179, 8, 0.35)",
+              color: "#0f172a", fontSize: "0.82rem", fontWeight: 800,
+              cursor: "pointer", boxShadow: "0 2px 8px rgba(0,0,0,0.03)",
+              transition: "all 0.2s ease"
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = "#fef08a"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = "#faf9f5"; }}
+          >
+            <Sparkles size={14} color="#d97706" />
+            <span>Tone: <strong style={{ color: "#d97706", textTransform: "capitalize" }}>{todayMood}</strong></span>
+            <span style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: 600 }}>(Change)</span>
+          </button>
         </header>
 
-        {/* Message List */}
+        {/* Messages Scroll Area with WhatsApp-Style Friday AI Doodle Background */}
         <div 
           ref={scrollRef}
           style={{ 
-            flex: 1, overflowY: "auto", padding: "40px 10%", 
-            display: "flex", flexDirection: "column", gap: "40px"
+            flex: 1, padding: "24px clamp(16px, 4vw, 100px) 140px", 
+            overflowY: "auto", display: "flex", flexDirection: "column", gap: "18px",
+            position: "relative",
+            backgroundColor: "#f5f2e9",
+            backgroundImage: `url("data:image/svg+xml,%3Csvg width='120' height='120' viewBox='0 0 120 120' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23d97706' fill-opacity='0.07' fill-rule='evenodd'%3E%3Cpath d='M15 15h10v10H15zM45 15l5 10h-10zM80 15a5 5 0 1 0 0 10 5 5 0 0 0 0-10zM15 50a8 8 0 1 0 0 16 8 8 0 0 0 0-16zM50 50h12v6H50zM85 50l6 12h-12zM15 85h14v4H15zM50 85a6 6 0 1 0 0 12 6 6 0 0 0 0-12zM85 85h8v8h-8z'/%3E%3Cpath d='M20 20l4-4m-4 4l-4-4m24 4l4 4m-4-4l-4 4m60 0l-4-4m4 4l4-4M30 60a3 3 0 1 1-6 0 3 3 0 0 1 6 0zm35 0a4 4 0 1 1-8 0 4 4 0 0 1 8 0zm35 0a3 3 0 1 1-6 0 3 3 0 0 1 6 0z'/%3E%3Ctext x='15' y='110' font-family='sans-serif' font-size='7' font-weight='bold' fill='%23d97706' fill-opacity='0.08'%3EFRIDAY AI%3C/text%3E%3Ctext x='70' y='35' font-family='sans-serif' font-size='6' font-weight='bold' fill='%23d97706' fill-opacity='0.08'%3ESYNAPSE%3C/text%3E%3Ctext x='75' y='110' font-family='sans-serif' font-size='6' font-weight='bold' fill='%23d97706' fill-opacity='0.08'%3EVOICE%3C/text%3E%3C/g%3E%3C/svg%3E")`,
+            backgroundRepeat: "repeat",
+            backgroundSize: "180px 180px"
           }}
-          className="chat-scroll-ref"
         >
           {messages.length === 0 && (
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%" }}>
-              <motion.div 
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 0.3, scale: 1 }}
-                transition={{ duration: 2 }}
-              >
+            <div style={{ margin: "auto", textAlign: "center", maxWidth: "540px", padding: "40px 20px" }}>
+              <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
                 <div style={{ 
-                  width: "120px", height: "120px", borderRadius: "40px",
-                  background: "radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%)",
-                  display: "flex", alignItems: "center", justifyContent: "center"
+                  width: "72px", height: "72px", borderRadius: "24px",
+                  background: "#fef08a",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  border: "1px solid rgba(234, 179, 8, 0.4)", margin: "0 auto 20px",
+                  boxShadow: "0 10px 25px rgba(250,204,21,0.3)"
                 }}>
-                  <Sparkles size={60} color="#fff" />
+                  <Sparkles size={32} color="#78350f" />
                 </div>
               </motion.div>
-              <p style={{ letterSpacing: "4px", fontSize: "0.8rem", color: "rgba(255,255,255,0.4)", fontWeight: 700, marginTop: "24px" }}>READY FOR COMMANDS</p>
+
+              <h3 style={{ fontSize: "1.4rem", fontWeight: 900, marginBottom: "8px", color: "#0f172a" }}>How can Friday help you today?</h3>
+              <p style={{ fontSize: "0.9rem", color: "#64748b", marginBottom: "28px", fontWeight: 500 }}>
+                Select a quick prompt to start or type your question below.
+              </p>
+
+              {/* Starter Prompt Chips */}
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "12px", width: "100%" }}>
+                {quickPrompts.map((prompt, idx) => (
+                  <motion.button
+                    key={idx}
+                    whileHover={{ scale: 1.02, backgroundColor: "#fef08a", borderColor: "#facc15" }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => handleSendText(prompt)}
+                    style={{
+                      padding: "14px 18px", borderRadius: "16px",
+                      background: "#ffffff", border: "1px solid rgba(0,0,0,0.08)",
+                      color: "#0f172a", fontSize: "0.88rem", fontWeight: 600, textAlign: "left",
+                      cursor: "pointer", transition: "all 0.2s ease",
+                      boxShadow: "0 4px 12px rgba(0,0,0,0.02)"
+                    }}
+                  >
+                    {prompt}
+                  </motion.button>
+                ))}
+              </div>
             </div>
           )}
           
@@ -422,144 +500,131 @@ const Chat = () => {
             {messages.map((m, i) => (
               <motion.div 
                 key={i}
-                initial={{ opacity: 0, y: 10 }}
+                initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 style={{ 
                   alignSelf: m.type === "user" ? "flex-end" : "flex-start",
-                  maxWidth: "75%",
+                  maxWidth: "80%",
                   display: "flex",
                   flexDirection: "column",
                   alignItems: m.type === "user" ? "flex-end" : "flex-start",
-                  gap: "12px"
+                  gap: "6px"
                 }}
               >
-                <div style={{ 
-                  padding: "20px 28px", 
-                  borderRadius: m.type === "user" ? "28px 28px 4px 28px" : "28px 28px 28px 4px",
-                  background: m.type === "user" ? "#fff" : "rgba(255,255,255,0.03)",
-                  border: m.type === "user" ? "none" : "1px solid rgba(255,255,255,0.08)",
-                  color: m.type === "user" ? "#000" : "#fff",
-                  fontWeight: m.type === "user" ? 600 : 400,
-                  fontSize: "1.05rem",
+                <div style={{
+                  padding: "16px 22px",
+                  borderRadius: m.type === "user" ? "22px 22px 4px 22px" : "22px 22px 22px 4px",
+                  background: m.type === "user" 
+                    ? "linear-gradient(135deg, #facc15 0%, #f59e0b 100%)" 
+                    : "#ffffff",
+                  border: m.type === "user" ? "none" : "1px solid rgba(234, 179, 8, 0.25)",
+                  color: "#0f172a",
+                  fontWeight: m.type === "user" ? 800 : 500,
+                  fontSize: "0.95rem",
                   lineHeight: 1.6,
-                  boxShadow: m.type === "user" ? "0 20px 40px rgba(255,255,255,0.15)" : "0 20px 40px rgba(0,0,0,0.2)",
-                  backdropFilter: m.type === "user" ? "none" : "blur(20px)"
+                  boxShadow: m.type === "user" ? "0 6px 20px rgba(250,204,21,0.35)" : "0 6px 20px rgba(0,0,0,0.04)"
                 }}>
                   {m.text}
                 </div>
-                <div style={{ display: "flex", alignItems: "center", gap: "8px", opacity: 0.4 }}>
-                  <span style={{ fontSize: "0.7rem", color: "#fff", fontWeight: 700, letterSpacing: "1px", textTransform: "uppercase" }}>
-                    {m.type === "user" ? "Directive" : "Assistant"}
-                  </span>
+
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.75rem", color: "#64748b" }}>
+                  <span>{m.time}</span>
+                  {m.type === "ai" && (
+                    <button 
+                      onClick={() => handleCopyMessage(m.text, i)}
+                      style={{ background: "none", border: "none", color: "#64748b", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px" }}
+                    >
+                      {copiedIndex === i ? <Check size={12} color="#d97706" /> : <Copy size={12} />}
+                      {copiedIndex === i ? "Copied" : "Copy"}
+                    </button>
+                  )}
                 </div>
               </motion.div>
             ))}
-            
-            {isTyping && (
-              <motion.div 
-                initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                style={{ alignSelf: "flex-start", padding: "12px 24px", background: "rgba(255,255,255,0.03)", borderRadius: "20px", display: "flex", gap: "12px", alignItems: "center" }}
-              >
-                <div className="dot-pulse" style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#fff" }} />
-                <span style={{ fontSize: "0.85rem", color: "rgba(255,255,255,0.5)", fontWeight: 500 }}>System processing...</span>
-              </motion.div>
-            )}
           </AnimatePresence>
+
+          {isTyping && (
+            <motion.div 
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+              style={{ alignSelf: "flex-start", display: "flex", alignItems: "center", gap: "8px", padding: "12px 18px", borderRadius: "18px", background: "#ffffff", border: "1px solid rgba(234, 179, 8, 0.25)" }}
+            >
+              <div className="wave-animation" style={{ display: "flex", gap: "4px" }}>
+                <span /><span /><span /><span />
+              </div>
+              <span style={{ fontSize: "0.85rem", color: "#d97706", fontWeight: 700 }}>Friday is typing...</span>
+            </motion.div>
+          )}
         </div>
 
-        {/* Minimalist Floating Input */}
-        <div style={{ padding: "40px 10%", position: "relative" }}>
+        {/* Input Bar */}
+        <div style={{ 
+          position: "absolute", bottom: 0, left: 0, right: 0, 
+          padding: "20px clamp(16px, 5vw, 120px)", 
+          background: "linear-gradient(to top, #faf9f5 80%, transparent)"
+        }}>
           <form 
-            onSubmit={handleSend}
+            onSubmit={handleFormSubmit}
             style={{ 
-              display: "flex", alignItems: "center", gap: "16px", padding: "12px",
-              background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)",
-              borderRadius: "28px", backdropFilter: "blur(40px)",
-              boxShadow: "0 30px 60px rgba(0,0,0,0.4)",
-              transition: "all 0.3s cubic-bezier(0.16, 1, 0.3, 1)"
+              display: "flex", alignItems: "center", gap: "10px", 
+              background: "#ffffff", 
+              border: "1px solid rgba(234, 179, 8, 0.3)",
+              borderRadius: "999px", padding: "8px 12px 8px 22px",
+              boxShadow: "0 10px 40px rgba(0,0,0,0.06)",
+              backdropFilter: "blur(30px)"
             }}
           >
-            <button 
-              type="button" 
-              onClick={toggleMic}
-              style={{ 
-                width: "52px", height: "52px", borderRadius: "18px", 
-                background: listening ? "#ff4d4d" : "rgba(255,255,255,0.03)",
-                border: "none",
-                color: listening ? "#fff" : "rgba(255,255,255,0.3)",
-                display: "flex", alignItems: "center", justifyContent: "center", 
-                transition: "all 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
-                boxShadow: listening ? "0 0 25px rgba(255, 77, 77, 0.5)" : "none",
-                cursor: "pointer", zIndex: 10
-              }}
-              className={listening ? "mic-pulse-ref" : ""}
-            >
-              <Mic size={24} fill={listening ? "#fff" : "none"} />
-            </button>
             <input 
+              type="text" 
+              placeholder="Ask Friday anything..." 
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Start typing..."
               style={{ 
-                flex: 1, padding: "12px", background: "transparent", border: "none", 
-                color: "#fff", outline: "none", fontSize: "1.1rem", fontWeight: 400
+                flex: 1, background: "none", border: "none", outline: "none", 
+                color: "#0f172a", fontSize: "0.95rem", fontWeight: 600
               }}
               disabled={isTyping}
             />
+
+            <button 
+              type="button"
+              onClick={toggleMic}
+              style={{ 
+                padding: "10px", borderRadius: "50%", 
+                background: listening ? "rgba(250,204,21,0.3)" : "#f1efe7", 
+                border: "1px solid " + (listening ? "#eab308" : "rgba(0,0,0,0.08)"),
+                color: listening ? "#d97706" : "#64748b", cursor: "pointer",
+                transition: "all 0.2s"
+              }}
+            >
+              <Mic size={18} />
+            </button>
+
             <button 
               type="submit" 
               disabled={!input.trim() || isTyping}
+              className="btn-primary"
               style={{ 
-                width: "52px", height: "52px", borderRadius: "50%", 
-                background: "#fff", color: "#000",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                opacity: (!input.trim() || isTyping) ? 0.3 : 1,
-                transition: "0.3s", cursor: "pointer",
-                boxShadow: "0 10px 30px rgba(255,255,255,0.2)"
+                width: "42px", height: "42px", borderRadius: "50%", padding: 0,
+                opacity: !input.trim() || isTyping ? 0.4 : 1
               }}
             >
-              <Send size={24} />
+              <Send size={18} />
             </button>
           </form>
-          <p style={{ textAlign: "center", marginTop: "16px", fontSize: "0.7rem", color: "rgba(255,255,255,0.3)", letterSpacing: "0.5px" }}>
-            As You Wish Terminal • Neural Encryption Active
-          </p>
         </div>
       </main>
 
-      <style>{`
-        .sidebar-btn-ref {
-          transition: all 0.2s;
-        }
-        .sidebar-btn-ref:hover {
-          background: rgba(255,255,255,0.05);
-          color: #fff !important;
-        }
-        .chat-scroll-ref::-webkit-scrollbar {
-          width: 4px;
-        }
-        .chat-scroll-ref::-webkit-scrollbar-thumb {
-          background: rgba(255,255,255,0.1);
-          border-radius: 10px;
-        }
-        .dot-pulse {
-          animation: dotPulse 1.5s infinite ease-in-out;
-        }
-        @keyframes dotPulse {
-          0% { opacity: 0.2; transform: scale(0.8); }
-          50% { opacity: 1; transform: scale(1.1); }
-          100% { opacity: 0.2; transform: scale(0.8); }
-        }
-        .mic-pulse-ref {
-          animation: micPulse 2s infinite cubic-bezier(0.4, 0, 0.6, 1);
-        }
-        @keyframes micPulse {
-          0%, 100% { opacity: 1; transform: scale(1); }
-          50% { opacity: 0.8; transform: scale(1.05); box-shadow: 0 0 30px rgba(255, 77, 77, 0.4); }
-        }
-      `}</style>
+      {/* Mood Switcher Modal Overlay */}
+      {showMoodModal && (
+        <MoodPrompt 
+          isModal={true} 
+          onClose={() => setShowMoodModal(false)} 
+          onMoodSelect={handleSetMood} 
+        />
+      )}
     </div>
   );
 };
 
 export default Chat;
+

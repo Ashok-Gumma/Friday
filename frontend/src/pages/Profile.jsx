@@ -2,13 +2,9 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Save, User as UserIcon, Mail, Shield, Zap, Sparkles } from "lucide-react";
+import { ArrowLeft, Save, User as UserIcon, Shield, Sparkles, Activity, Check } from "lucide-react";
 import ProfileSelection from "../components/ProfileSelection";
-import WordScroller from "../components/WordScroller";
-import logo from "../assets/red-logo.png";
 import FridayLogo from "../components/FridayLogo.jsx";
-
-import chatBg from "../assets/chat-bg.png";
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -16,8 +12,6 @@ const Profile = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
-
-  const profileWords = ["ANALYTICS", "COMMAND", "NEURAL", "MISSION", "biometric", "protocol"];
 
   useEffect(() => {
     fetchProfile();
@@ -54,10 +48,10 @@ const Profile = () => {
       );
       setProfile(res.data.profile);
       localStorage.setItem("userProfile", JSON.stringify(res.data.profile));
-      setMessage("Profile synchronized successfully!");
-      setTimeout(() => setMessage(""), 3000);
+      setMessage("Profile saved successfully!");
+      setTimeout(() => setMessage(""), 3500);
     } catch (err) {
-      setMessage("Synchronization failed");
+      setMessage("Failed to save profile. Please retry.");
     } finally {
       setSaving(false);
     }
@@ -73,158 +67,145 @@ const Profile = () => {
   };
 
   if (loading) return (
-    <div style={{ height: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--bg-deep)" }}>
-      <p style={{ letterSpacing: "4px", color: "var(--accent)", animation: "pulse-glow 1s infinite" }}>INITIALIZING...</p>
+    <div style={{ height: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#faf9f5", color: "#d97706" }}>
+      <p style={{ letterSpacing: "1px", fontWeight: 800, fontFamily: "'Inter', sans-serif" }}>Loading your profile...</p>
     </div>
   );
 
   return (
     <div style={{ 
-      minHeight: "100vh", background: "#000", color: "#fff", 
+      minHeight: "100vh", background: "#faf9f5", color: "#0f172a", 
       display: "flex", flexDirection: "column", position: "relative", overflow: "hidden",
-      fontFamily: "'General Sans', sans-serif"
+      fontFamily: "'Inter', sans-serif"
     }}>
-      {/* Exact Reference Background */}
-      <div style={{ 
-        position: "fixed", inset: 0, zIndex: 0, 
-        backgroundImage: `url(${chatBg})`,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        filter: "brightness(0.7)"
+      {/* Background Glow */}
+      <div style={{
+        position: "absolute", inset: 0, pointerEvents: "none", zIndex: 0,
+        background: "radial-gradient(circle at 50% 10%, rgba(250, 204, 21, 0.15) 0%, transparent 60%)"
       }} />
 
-      {/* Transparent Minimalist Header */}
+      {/* Header */}
       <header style={{ 
-        padding: "24px 40px", display: "flex", justifyContent: "space-between", alignItems: "center",
-        position: "relative", zIndex: 100
+        padding: "24px clamp(20px, 6vw, 60px)", display: "flex", justifyContent: "space-between", alignItems: "center",
+        position: "relative", zIndex: 100, borderBottom: "1px solid rgba(234, 179, 8, 0.2)",
+        background: "rgba(255, 255, 255, 0.85)", backdropFilter: "blur(20px)"
       }}>
-        <div 
-          onClick={() => navigate("/")} 
-          style={{ display: "flex", alignItems: "center", gap: "12px", cursor: "pointer", opacity: 0.8 }}
-        >
-          <FridayLogo size="1.2rem" />
+        <div onClick={() => navigate("/")} style={{ cursor: "pointer" }}>
+          <FridayLogo size="1.3rem" color="#0f172a" />
         </div>
 
         <button 
           onClick={() => navigate("/chat")}
           style={{ 
-            display: "flex", alignItems: "center", gap: "10px", 
-            background: "rgba(255, 255, 255, 0.05)", color: "rgba(255,255,255,0.6)", 
-            padding: "10px 20px", borderRadius: "12px", 
-            border: "1px solid rgba(255, 255, 255, 0.1)", fontWeight: 700,
-            fontSize: "0.8rem", transition: "0.3s", cursor: "pointer",
-            backdropFilter: "blur(10px)"
+            display: "flex", alignItems: "center", gap: "8px", 
+            background: "#ffffff", color: "#0f172a", 
+            padding: "10px 22px", borderRadius: "999px", 
+            border: "1px solid rgba(0, 0, 0, 0.12)", fontWeight: 700,
+            fontSize: "0.88rem", transition: "all 0.2s", cursor: "pointer",
+            boxShadow: "0 4px 12px rgba(0,0,0,0.04)"
           }}
-          className="header-action-btn"
+          onMouseEnter={(e) => { e.currentTarget.style.background = "#f1efe7"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = "#ffffff"; }}
         >
-          <ArrowLeft size={16} /> BACK TO TERMINAL
+          <ArrowLeft size={16} /> Back to Chat
         </button>
       </header>
 
-      <main style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "40px 24px", position: "relative", zIndex: 10 }}>
+      <main style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "40px 20px", position: "relative", zIndex: 10 }}>
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
           style={{ 
-            width: "100%", maxWidth: "800px", padding: "64px",
-            background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.06)",
-            borderRadius: "40px", backdropFilter: "blur(50px)",
-            boxShadow: "0 50px 100px rgba(0,0,0,0.5)"
+            width: "100%", maxWidth: "800px", padding: "44px 36px",
+            background: "#ffffff", border: "1px solid rgba(234, 179, 8, 0.25)",
+            borderRadius: "32px",
+            boxShadow: "0 25px 60px rgba(0,0,0,0.06)"
           }}
         >
-          {/* Minimalist Profile Header */}
-          <div style={{ textAlign: "center", marginBottom: "64px" }}>
-            <motion.div 
-               style={{ 
-                width: "64px", height: "64px", borderRadius: "50%", 
-                background: "rgba(255,255,255,0.05)", color: "#fff",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                margin: "0 auto 20px", border: "1px solid rgba(255, 255, 255, 0.1)"
+          {/* Profile Identity Card */}
+          <div style={{ textAlign: "center", marginBottom: "40px" }}>
+            <div style={{ 
+              width: "72px", height: "72px", borderRadius: "50%", 
+              background: "linear-gradient(135deg, #facc15 0%, #f59e0b 100%)", color: "#0e0a05",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              margin: "0 auto 16px", boxShadow: "0 8px 24px rgba(250, 204, 21, 0.4)"
+            }}>
+              <UserIcon size={32} />
+            </div>
+            <h2 style={{ fontSize: "2rem", fontWeight: 900, letterSpacing: "-0.5px", marginBottom: "4px", color: "#0f172a" }}>
+              {profile?.name || "User"}
+            </h2>
+            <p style={{ color: "#64748b", fontSize: "0.92rem", fontWeight: 600 }}>{profile?.email}</p>
+          </div>
+
+          {/* Quick Metrics Bar */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "14px", marginBottom: "36px" }}>
+            <StatCard icon={<Sparkles size={18} />} label="Strengths Selected" value={profile?.strengths?.length || 0} />
+            <StatCard icon={<Shield size={18} />} label="Growth Areas" value={profile?.weaknesses?.length || 0} />
+            <StatCard icon={<Activity size={18} />} label="Hobbies Added" value={profile?.hobbies?.length || 0} />
+          </div>
+
+          {/* Preferences Selection */}
+          <div style={{ marginBottom: "36px" }}>
+            <div style={{ padding: "24px", background: "#faf9f5", borderRadius: "24px", border: "1px solid rgba(234, 179, 8, 0.2)" }}>
+              <ProfileSelection selections={profile || { hobbies: [], strengths: [], weaknesses: [] }} onSelect={handleSelect} />
+            </div>
+          </div>
+
+          {/* Save Action */}
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "16px" }}>
+            <button 
+              onClick={handleSave} 
+              disabled={saving}
+              className="btn-primary"
+              style={{ 
+                padding: "15px 44px", fontSize: "0.98rem"
               }}
             >
-              <UserIcon size={24} />
-            </motion.div>
-            <h2 style={{ fontSize: "2rem", fontWeight: 900, letterSpacing: "-1px", marginBottom: "4px" }}>{profile?.name || "Operator"}</h2>
-            <p style={{ color: "rgba(255,255,255,0.3)", fontSize: "0.9rem", letterSpacing: "0.5px" }}>{profile?.email}</p>
-          </div>
+              <Save size={18} />
+              {saving ? "Saving..." : "Save Preferences"}
+            </button>
 
-          {/* Clean Selection Section */}
-          <div style={{ marginBottom: "56px" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "24px", opacity: 0.4 }}>
-              <Zap size={14} color="#fff" />
-              <span style={{ fontSize: "0.7rem", fontWeight: 800, letterSpacing: "2px", textTransform: "uppercase" }}>Neural Settings</span>
-            </div>
-            <ProfileSelection selections={profile || { hobbies: [], strengths: [], weaknesses: [] }} onSelect={handleSelect} />
+            {message && (
+              <motion.div 
+                initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+                style={{ 
+                  color: "#047857", fontWeight: 800, fontSize: "0.9rem",
+                  display: "flex", alignItems: "center", gap: "6px",
+                  padding: "8px 18px", borderRadius: "12px", background: "#d1fae5",
+                  border: "1px solid #6ee7b7"
+                }}
+              >
+                <Check size={16} /> {message}
+              </motion.div>
+            )}
           </div>
-
-          {/* Action Area */}
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "24px" }}>
-             <button 
-               onClick={handleSave} 
-               disabled={saving}
-               style={{ 
-                 padding: "14px 44px", borderRadius: "14px",
-                 fontSize: "0.95rem", fontWeight: 800, background: "#fff", color: "#000",
-                 border: "none", cursor: "pointer", transition: "0.3s",
-                 boxShadow: "0 10px 30px rgba(255,255,255,0.15)"
-               }}
-               onMouseEnter={(e) => { e.currentTarget.style.transform = "translateY(-2px)"; }}
-               onMouseLeave={(e) => { e.currentTarget.style.transform = "translateY(0)"; }}
-             >
-               {saving ? "SYNCING..." : "COMMIT CHANGES"}
-             </button>
-          </div>
-
-          {message && (
-             <motion.p 
-               initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-               style={{ textAlign: "center", marginTop: "24px", color: "#10b981", fontWeight: 700, fontSize: "0.9rem" }}
-             >
-               {message}
-             </motion.p>
-          )}
         </motion.div>
       </main>
-
-      <footer style={{ padding: "40px", textAlign: "center", opacity: 0.3, fontSize: "0.7rem", letterSpacing: "1px" }}>
-        NEURAL INTERFACE v2.0 • Friday Core
-      </footer>
-
-      <style>{`
-        .header-action-btn:hover {
-          background: rgba(255, 77, 77, 0.2) !important;
-          transform: translateY(-2px);
-          box-shadow: 0 8px 30px rgba(255, 77, 77, 0.3) !important;
-        }
-      `}</style>
     </div>
   );
 };
 
-const StatCard = ({ icon, label, value, sub }) => (
-  <motion.div 
-    whileHover={{ y: -8 }}
-    style={{ 
-      padding: "28px", display: "flex", alignItems: "center", gap: "20px", 
-      background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.06)",
-      borderRadius: "24px", backdropFilter: "blur(20px)",
-      transition: "all 0.4s cubic-bezier(0.16, 1, 0.3, 1)"
-    }}
-  >
+const StatCard = ({ icon, label, value }) => (
+  <div style={{ 
+    padding: "18px 20px", display: "flex", alignItems: "center", gap: "14px", 
+    background: "#faf9f5", border: "1px solid rgba(234, 179, 8, 0.2)",
+    borderRadius: "18px"
+  }}>
     <div style={{ 
-      background: "rgba(255, 77, 77, 0.1)", color: "#ff4d4d", 
-      padding: "14px", borderRadius: "14px", boxShadow: "0 0 15px rgba(255, 77, 77, 0.1)"
+      background: "#fef08a", color: "#78350f", 
+      padding: "10px", borderRadius: "12px", border: "1px solid rgba(234, 179, 8, 0.3)"
     }}>
       {icon}
     </div>
-    <div>
-      <p style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.4)", textTransform: "uppercase", fontWeight: 800, letterSpacing: "1px" }}>{label}</p>
-      <div style={{ display: "flex", alignItems: "baseline", gap: "8px", marginTop: "4px" }}>
-        <p style={{ fontSize: "1.3rem", fontWeight: 900, letterSpacing: "-0.5px" }}>{value}</p>
-        <span style={{ fontSize: "0.75rem", color: "#ff4d4d", fontWeight: 800 }}>{sub}</span>
-      </div>
+    <div style={{ textAlign: "left" }}>
+      <p style={{ fontSize: "0.78rem", color: "#64748b", fontWeight: 700 }}>{label}</p>
+      <p style={{ fontSize: "1.3rem", fontWeight: 900, color: "#0f172a", marginTop: "2px" }}>{value}</p>
     </div>
-  </motion.div>
+  </div>
 );
 
 export default Profile;
+
+
