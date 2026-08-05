@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Inter:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap');
 
 /* Global Reset & Typography */
 * {
@@ -9,52 +9,54 @@
 }
 
 :root {
-  /* Clean White & Golden Yellow Palette */
-  --bg-deep: #faf9f6;
-  --bg-dark: #f3f0e6;
-  --bg-card: #ffffff;
-  --text-primary: #0f172a;
-  --text-secondary: #475569;
-  --text-muted: #64748b;
+  /* Ultra-Minimal Monochrome Palette (Black, White & Silver) */
+  --bg-deep: #000000;
+  --bg-dark: #09090b;
+  --bg-card: #121215;
+  --bg-card-hover: #18181c;
   
-  /* Golden Yellow & Amber Accent */
-  --accent: #eab308;
-  --accent-hover: #facc15;
-  --accent-warm: #d97706;
-  --accent-glow: rgba(234, 179, 8, 0.35);
-  --accent-subtle: rgba(250, 204, 21, 0.15);
+  --text-primary: #ffffff;
+  --text-secondary: #a1a1aa;
+  --text-muted: #71717a;
 
-  /* Glassmorphism for Light Theme */
-  --glass-border: rgba(234, 179, 8, 0.2);
-  --glass-border-hover: rgba(234, 179, 8, 0.4);
-  --glass-bg: rgba(255, 255, 255, 0.85);
-  --glass-blur: blur(20px);
+  /* Pure White & Silver Accents */
+  --accent-white: #ffffff;
+  --accent-silver: #e4e4e7;
+  --accent-glow: rgba(255, 255, 255, 0.25);
+  --accent-subtle: rgba(255, 255, 255, 0.08);
 
-  /* Elevated Shadows */
-  --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.04);
-  --shadow-md: 0 12px 28px rgba(0, 0, 0, 0.06);
-  --shadow-lg: 0 25px 50px rgba(0, 0, 0, 0.08);
+  /* Glassmorphism for Minimal Dark Theme */
+  --glass-border: rgba(255, 255, 255, 0.12);
+  --glass-border-hover: rgba(255, 255, 255, 0.3);
+  --glass-bg: rgba(12, 12, 16, 0.7);
+  --glass-blur: blur(24px);
+
+  /* High Tech Minimal Shadows */
+  --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 12px 28px rgba(0, 0, 0, 0.7);
+  --shadow-lg: 0 25px 50px rgba(0, 0, 0, 0.9);
+  --shadow-white: 0 0 30px rgba(255, 255, 255, 0.15);
 
   /* Transitions */
   --transition-fast: 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   --transition-smooth: 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Custom Scrollbar */
+/* Custom Scrollbar for Dark Minimal Theme */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 ::-webkit-scrollbar-track {
-  background: #f1efe7;
+  background: #000000;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(234, 179, 8, 0.4);
+  background: rgba(255, 255, 255, 0.25);
   border-radius: 999px;
   transition: background 0.2s;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(234, 179, 8, 0.8);
+  background: rgba(255, 255, 255, 0.6);
 }
 
 html, body {
@@ -70,51 +72,78 @@ html, body {
 
 /* Selection */
 ::selection {
-  background: var(--accent-subtle);
-  color: #facc15;
+  background: rgba(255, 255, 255, 0.25);
+  color: #ffffff;
 }
 
-/* Utility Classes */
-.glass {
-  background: var(--glass-bg);
-  backdrop-filter: var(--glass-blur);
-  border: 1px solid var(--glass-border);
-  border-radius: 20px;
-  transition: border-color 0.25s ease, box-shadow 0.25s ease;
-}
-.glass:hover {
-  border-color: var(--glass-border-hover);
+/* FONT UTILITIES: MIX OF CURLY & NORMAL FONT */
+.font-curly {
+  font-family: 'Caveat', cursive !important;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  font-size: 1.25em;
+  display: inline-block;
+  color: #ffffff;
 }
 
-.text-gradient {
-  background: linear-gradient(135deg, #ffffff 0%, #facc15 50%, #f59e0b 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+.font-serif-italic {
+  font-family: 'Instrument Serif', serif !important;
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: -0.5px;
+  font-size: 1.15em;
+  display: inline-block;
+  color: #ffffff;
 }
 
 .font-handwriting {
-  font-family: 'Caveat', cursive, sans-serif !important;
-  font-size: 1.4rem;
+  font-family: 'Caveat', cursive !important;
+  font-size: 1.3em;
   line-height: 1;
 }
 
-.text-gradient-amber {
-  background: linear-gradient(135deg, #ffffff 0%, #facc15 50%, #f59e0b 100%);
+.font-mono {
+  font-family: 'JetBrains Mono', monospace !important;
+}
+
+/* Minimalist Glass Card Utilities */
+.minimal-card {
+  background: rgba(12, 12, 16, 0.7);
+  backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 24px;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.minimal-card:hover {
+  border-color: rgba(255, 255, 255, 0.35);
+  box-shadow: 0 0 30px rgba(255, 255, 255, 0.08);
+  transform: translateY(-2px);
+}
+
+.text-gradient-white {
+  background: linear-gradient(180deg, #ffffff 0%, #a1a1aa 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
-.btn-primary {
-  background: linear-gradient(135deg, #facc15 0%, #f59e0b 100%);
-  color: #0e0a05;
+.text-gradient-silver {
+  background: linear-gradient(135deg, #ffffff 0%, #e4e4e7 50%, #a1a1aa 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Minimalist Primary & Secondary Buttons */
+.btn-minimal-primary {
+  background: #ffffff;
+  color: #000000;
   font-weight: 800;
-  padding: 14px 30px;
+  padding: 12px 28px;
   border-radius: 9999px;
   transition: var(--transition-smooth);
-  box-shadow: 0 4px 20px rgba(250, 204, 21, 0.4);
-  border: 1px solid rgba(254, 240, 138, 0.5);
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.25);
+  border: 1px solid #ffffff;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
@@ -123,20 +152,46 @@ html, body {
   letter-spacing: 0.2px;
 }
 
-.btn-primary:hover {
-  transform: translateY(-3px) scale(1.02);
-  box-shadow: 0 10px 30px rgba(250, 204, 21, 0.6);
-  background: linear-gradient(135deg, #ffffff 0%, #facc15 100%);
+.btn-minimal-primary:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 0 30px rgba(255, 255, 255, 0.5);
+  background: #f4f4f5;
 }
 
-.btn-primary:active {
-  transform: translateY(0);
+.btn-minimal-secondary {
+  background: rgba(255, 255, 255, 0.06);
+  color: #ffffff;
+  font-weight: 700;
+  padding: 12px 26px;
+  border-radius: 9999px;
+  transition: var(--transition-smooth);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  backdrop-filter: blur(12px);
 }
 
-.auth-input-premium:focus {
-  border-color: var(--accent) !important;
-  box-shadow: 0 0 14px var(--accent-glow) !important;
-  background: rgba(250, 204, 21, 0.05) !important;
+.btn-minimal-secondary:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.4);
+  color: #ffffff;
+  transform: translateY(-2px);
+}
+
+@keyframes pulse-white {
+  0%, 100% {
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.15);
+  }
+  50% {
+    box-shadow: 0 0 25px rgba(255, 255, 255, 0.35);
+  }
+}
+
+.glow-white {
+  animation: pulse-white 3s infinite ease-in-out;
 }
 
 @keyframes wave-bar {
@@ -147,7 +202,7 @@ html, body {
 .wave-animation span {
   display: inline-block;
   width: 3px;
-  background: #facc15;
+  background: #ffffff;
   border-radius: 4px;
   animation: wave-bar 0.9s infinite ease-in-out;
 }
@@ -156,10 +211,83 @@ html, body {
 .wave-animation span:nth-child(3) { animation-delay: 0.3s; }
 .wave-animation span:nth-child(4) { animation-delay: 0.4s; }
 
-.wave-animation span:nth-child(1) { animation-delay: 0.1s; }
-.wave-animation span:nth-child(2) { animation-delay: 0.2s; }
-.wave-animation span:nth-child(3) { animation-delay: 0.3s; }
-.wave-animation span:nth-child(4) { animation-delay: 0.4s; }
+/* ==========================================================================
+   MOBILE & TABLET RESPONSIVE MEDIA QUERIES (FLAWLESS MOBILE EXPERIENCE)
+   ========================================================================== */
 
+/* Universal Touch Device Optimizations */
+button, input, select, textarea, a {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
 
+/* Tablet & Mobile Devices (<= 768px) */
+@media (max-width: 768px) {
+  body, html {
+    font-size: 14px;
+  }
+
+  /* Compact Minimal Buttons for Mobile Header & Forms */
+  .btn-minimal-primary {
+    padding: 8px 18px !important;
+    font-size: 0.8rem !important;
+  }
+  
+  .btn-minimal-secondary {
+    padding: 8px 16px !important;
+    font-size: 0.8rem !important;
+  }
+
+  /* Mobile Responsive Glass Cards */
+  .minimal-card {
+    padding: 20px 16px !important;
+    border-radius: 18px !important;
+  }
+
+  /* Font Adjustments on Mobile */
+  .font-curly {
+    font-size: 1.15em !important;
+  }
+
+  .font-serif-italic {
+    font-size: 1.1em !important;
+  }
+
+  /* Mobile Header Navigation */
+  header {
+    padding: 10px 16px !important;
+  }
+
+  /* Mobile Layout Utilities */
+  .hide-on-mobile {
+    display: none !important;
+  }
+}
+
+/* Small Smartphone Screens (<= 480px) */
+@media (max-width: 480px) {
+  h1 {
+    font-size: 2.1rem !important;
+    line-height: 1.2 !important;
+  }
+
+  h2 {
+    font-size: 1.7rem !important;
+  }
+
+  h3 {
+    font-size: 1.2rem !important;
+  }
+
+  /* Header adjustments on small screens */
+  header {
+    padding: 8px 12px !important;
+  }
+
+  /* Form padding adjustments */
+  .auth-card-mobile {
+    padding: 24px 16px !important;
+    border-radius: 20px !important;
+  }
+}
 

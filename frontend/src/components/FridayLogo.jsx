@@ -1,8 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 
-
-const FridayLogo = ({ size = "1.4rem", color = "#0f172a", showBadge = true }) => {
+const FridayLogo = ({ size = "1.4rem", color = "#ffffff", showBadge = true }) => {
   return (
     <motion.div
       whileHover={{ scale: 1.02 }}
@@ -11,71 +10,66 @@ const FridayLogo = ({ size = "1.4rem", color = "#0f172a", showBadge = true }) =>
         display: "inline-flex",
         alignItems: "center",
         gap: "10px",
-        fontFamily: "'Georgia', 'Playfair Display', 'Inter', serif",
         position: "relative",
         userSelect: "none",
         cursor: "pointer",
       }}
     >
-      {/* Retro Vintage Stamp Emblem (No Glow) */}
+      {/* Sleek Minimal Emblem */}
       {showBadge && (
         <div
           style={{
-            width: `calc(${size} * 1.4)`,
-            height: `calc(${size} * 1.4)`,
+            width: `calc(${size} * 1.3)`,
+            height: `calc(${size} * 1.3)`,
             borderRadius: "50%",
-            background: "#fef3c7",
-            border: "2px solid #b45309",
+            background: "rgba(255, 255, 255, 0.08)",
+            border: "1px solid rgba(255, 255, 255, 0.3)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            color: "#78350f",
+            color: "#ffffff",
             flexShrink: 0,
-            boxShadow: "0 2px 5px rgba(0,0,0,0.06)",
-            fontWeight: 900,
-            fontSize: `calc(${size} * 0.7)`
+            boxShadow: "0 0 15px rgba(255, 255, 255, 0.15)",
+            fontWeight: 800,
+            fontSize: `calc(${size} * 0.65)`
           }}
         >
-          ★
+          ✦
         </div>
       )}
 
-      {/* Retro Wordmark */}
+      {/* Wordmark with curly & clean typography blend */}
       <span
         style={{
           fontSize: size,
           lineHeight: 1,
           color: color,
           fontWeight: 800,
-          fontFamily: "'Georgia', 'Times New Roman', serif",
-          letterSpacing: "-0.3px"
+          fontFamily: "'Inter', sans-serif",
+          letterSpacing: "-0.5px"
         }}
       >
-        Friday
+        Friday <span style={{ fontFamily: "'Caveat', cursive", fontWeight: 600, fontSize: "1.15em", color: "#e4e4e7" }}>ai</span>
       </span>
 
-      {/* Retro Stamp Tag */}
+      {/* Sleek Tag */}
       <span
         style={{
-          fontSize: `calc(${size} * 0.42)`,
-          fontWeight: 900,
-          color: "#78350f",
-          padding: "2px 8px",
-          borderRadius: "6px",
-          background: "#fef08a",
-          border: "1.5px solid #d97706",
+          fontSize: `calc(${size} * 0.38)`,
+          fontWeight: 800,
+          color: "#000000",
+          padding: "2px 7px",
+          borderRadius: "999px",
+          background: "#ffffff",
           letterSpacing: "1px",
-          fontFamily: "'Inter', sans-serif",
+          fontFamily: "'JetBrains Mono', monospace",
           textTransform: "uppercase"
         }}
       >
-        AI
+        v4.2
       </span>
     </motion.div>
   );
 };
 
 export default FridayLogo;
-
-
-

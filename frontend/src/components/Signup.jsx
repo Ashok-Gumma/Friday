@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { User, Mail, Lock, ArrowRight, ChevronLeft, Eye, EyeOff, Sparkles } from "lucide-react";
 import ProfileSelection from "./ProfileSelection";
 import FridayLogo from "./FridayLogo.jsx";
+import SatelliteCanvas from "./SatelliteCanvas.jsx";
 import { useLoading } from "../context/LoadingContext.jsx";
 
 const Signup = () => {
@@ -26,22 +27,13 @@ const Signup = () => {
   const [loading, setLoading] = useState(false);
 
   const handleLogoClick = () => {
-    triggerLoading(2000);
+    triggerLoading(1500);
     navigate("/");
   };
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
     setError("");
-  };
-
-  const handleSelect = (category, value) => {
-    setForm((prev) => ({
-      ...prev,
-      [category]: prev[category].includes(value)
-        ? prev[category].filter((v) => v !== value)
-        : [...prev[category], value],
-    }));
   };
 
   const handleNextStep = (e) => {
@@ -91,210 +83,289 @@ const Signup = () => {
   };
 
   return (
-    <div style={{ 
-      minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center",
-      background: "#faf9f5", padding: "50px 20px", position: "relative",
-      fontFamily: "'Inter', sans-serif"
-    }}>
-      {/* Ambient background light */}
-      <div style={{
-        position: "absolute", inset: 0, pointerEvents: "none", zIndex: 0,
-        background: "radial-gradient(circle at 50% 25%, rgba(250, 204, 21, 0.15) 0%, transparent 65%)"
-      }} />
+    <div
+      style={{ 
+        minHeight: "100vh",
+        background: "#000000",
+        color: "#ffffff",
+        display: "flex",
+        flexDirection: "column",
+        justify: "space-between",
+        position: "relative",
+        fontFamily: "'Inter', sans-serif"
+      }}
+    >
+      {/* CONTINUOUS SATELLITE CANVAS BACKGROUND */}
+      <SatelliteCanvas density={60} connectionDistance={130} interactive={true} />
 
-      <motion.div 
-        initial={{ opacity: 0, scale: 0.98, y: 20 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-        style={{ 
-          width: "100%", maxWidth: "640px", padding: "44px 36px", 
-          background: "#ffffff",
-          borderRadius: "32px",
-          border: "1px solid rgba(234, 179, 8, 0.25)",
-          boxShadow: "0 25px 60px rgba(0,0,0,0.06)",
-          zIndex: 10, position: "relative",
-          textAlign: "center"
+      {/* AMBIENT SOFT LIGHT GLOW */}
+      <div
+        style={{
+          position: "fixed",
+          top: "20%",
+          left: "50%",
+          transform: "translateX(-50%)",
+          width: "700px",
+          height: "400px",
+          background: "radial-gradient(circle, rgba(255, 255, 255, 0.12) 0%, rgba(0,0,0,0) 70%)",
+          opacity: 0.15,
+          pointerEvents: "none",
+          zIndex: 1
         }}
-      >
-        <button 
-          onClick={step === 2 ? () => setStep(1) : handleLogoClick}
-          style={{ 
-            position: "absolute", top: "24px", left: "24px", background: "none", border: "none", 
-            color: "#64748b", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px",
-            fontSize: "13px", fontWeight: 700, transition: "color 0.2s"
+      />
+
+      <div style={{ position: "relative", zIndex: 10, flex: 1, display: "flex", flexDirection: "column" }}>
+        
+        {/* FULL WIDTH HEADER NAVIGATION BAR WITH FAR END CORNER ACTIONS */}
+        <header
+          style={{
+            position: "sticky",
+            top: 0,
+            zIndex: 100,
+            background: "rgba(9, 9, 11, 0.8)",
+            backdropFilter: "blur(24px)",
+            borderBottom: "1px solid rgba(255, 255, 255, 0.08)",
+            width: "100%",
+            padding: "14px clamp(24px, 3.5vw, 56px)",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center"
           }}
-          onMouseEnter={(e) => { e.currentTarget.style.color = "#d97706"; }}
-          onMouseLeave={(e) => { e.currentTarget.style.color = "#64748b"; }}
         >
-          <ChevronLeft size={16} /> {step === 2 ? "Back to Step 1" : "Home"}
-        </button>
-
-        {/* Step Indicator */}
-        <div style={{ display: "inline-flex", gap: "8px", position: "absolute", top: "28px", right: "28px" }}>
-          <span style={{ width: "24px", height: "4px", borderRadius: "2px", background: "#facc15" }} />
-          <span style={{ width: "24px", height: "4px", borderRadius: "2px", background: step === 2 ? "#facc15" : "rgba(0,0,0,0.1)", transition: "background 0.3s" }} />
-        </div>
-
-        <div style={{ textAlign: "center", marginBottom: "32px", marginTop: "12px" }}>
-          <div onClick={handleLogoClick} style={{ marginBottom: "18px", display: "inline-block", cursor: "pointer" }}>
-            <FridayLogo size="1.8rem" color="#0f172a" />
+          {/* Far Left Corner: Friday Logo */}
+          <div 
+            onClick={handleLogoClick} 
+            style={{ cursor: "pointer", display: "flex", alignItems: "center" }}
+          >
+            <FridayLogo size="1.3rem" color="#ffffff" showBadge={true} />
           </div>
 
-          <h2 style={{ fontSize: "1.8rem", fontWeight: 900, marginBottom: "6px", letterSpacing: "-0.5px", color: "#0f172a" }}>
-            {step === 1 ? "Create your account" : "Your Preferences"}
-          </h2>
-          <p style={{ color: "#64748b", fontSize: "0.92rem", fontWeight: 500 }}>
-            {step === 1 ? "Step 1 of 2 — Enter your details" : "Step 2 of 2 — Tell Friday a bit about yourself"}
-          </p>
-        </div>
+          {/* Far Right Corner: Auth Actions */}
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <Link to="/login" style={{ textDecoration: "none" }}>
+              <button className="btn-minimal-secondary" style={{ padding: "8px 20px", fontSize: "0.82rem" }}>
+                Sign In
+              </button>
+            </Link>
+          </div>
+        </header>
 
-        {error && (
+        {/* CENTERED SIGNUP FORM CONTAINER */}
+        <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "40px 20px" }}>
           <motion.div 
-            initial={{ opacity: 0, x: 15 }} animate={{ opacity: 1, x: 0 }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+            className="minimal-card"
             style={{ 
-              background: "#fef3c7", color: "#92400e", 
-              padding: "12px 16px", borderRadius: "14px", marginBottom: "24px", fontSize: "0.88rem", textAlign: "left",
-              border: "1px solid rgba(234, 179, 8, 0.4)", fontWeight: 700
+              width: "100%",
+              maxWidth: step === 1 ? "440px" : "620px",
+              padding: "40px 32px", 
+              textAlign: "center",
+              boxShadow: "0 25px 60px rgba(0,0,0,0.8)",
+              transition: "max-width 0.3s ease"
             }}
           >
-            {error}
-          </motion.div>
-        )}
+            {/* Step Indicator */}
+            <div style={{ display: "inline-flex", gap: "6px", position: "absolute", top: "24px", right: "24px" }}>
+              <span style={{ width: "20px", height: "3px", borderRadius: "2px", background: "#ffffff" }} />
+              <span style={{ width: "20px", height: "3px", borderRadius: "2px", background: step === 2 ? "#ffffff" : "rgba(255,255,255,0.2)", transition: "background 0.3s" }} />
+            </div>
 
-        <AnimatePresence mode="wait">
-          {step === 1 ? (
-            <motion.form 
-              key="step1"
-              initial={{ opacity: 0, x: -15 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 15 }}
-              onSubmit={handleNextStep} 
-              style={{ display: "flex", flexDirection: "column", gap: "16px" }}
-            >
-              <div style={{ position: "relative" }}>
-                <User size={18} style={{ position: "absolute", left: "16px", top: "50%", transform: "translateY(-50%)", color: "#94a3b8" }} />
-                <input
-                  style={{ 
-                    width: "100%", padding: "14px 16px 14px 48px", borderRadius: "14px", 
-                    background: "#f8fafc", border: "1px solid rgba(0,0,0,0.12)",
-                    color: "#0f172a", outline: "none", transition: "all 0.25s ease",
-                    fontSize: "0.95rem", fontWeight: 600
-                  }}
-                  className="auth-input-premium"
-                  name="name"
-                  placeholder="Your Name"
-                  value={form.name}
-                  onChange={handleChange}
-                  required
-                />
+            {/* Header branding */}
+            <div style={{ marginBottom: "28px" }}>
+              <div onClick={handleLogoClick} style={{ marginBottom: "14px", display: "inline-block", cursor: "pointer" }}>
+                <FridayLogo size="1.6rem" color="#ffffff" />
               </div>
 
-              <div style={{ position: "relative" }}>
-                <Mail size={18} style={{ position: "absolute", left: "16px", top: "50%", transform: "translateY(-50%)", color: "#94a3b8" }} />
-                <input
-                  style={{ 
-                    width: "100%", padding: "14px 16px 14px 48px", borderRadius: "14px", 
-                    background: "#f8fafc", border: "1px solid rgba(0,0,0,0.12)",
-                    color: "#0f172a", outline: "none", transition: "all 0.25s ease",
-                    fontSize: "0.95rem", fontWeight: 600
-                  }}
-                  className="auth-input-premium"
-                  name="email"
-                  type="email"
-                  placeholder="Email address"
-                  value={form.email}
-                  onChange={handleChange}
-                  required
-                />
-              </div>
+              <h2 style={{ fontSize: "1.9rem", fontWeight: 800, marginBottom: "6px", color: "#ffffff" }}>
+                {step === 1 ? (
+                  <>Create <span className="font-curly" style={{ fontSize: "1.25em" }}>your account</span></>
+                ) : (
+                  <>Personalize <span className="font-serif-italic">your profile</span></>
+                )}
+              </h2>
+              <p style={{ color: "#a1a1aa", fontSize: "0.88rem", fontWeight: 400 }}>
+                {step === 1 ? "Step 1 of 2 — Enter your details to get started" : "Step 2 of 2 — Tailor Friday to your preferences"}
+              </p>
+            </div>
 
-              <div style={{ position: "relative" }}>
-                <Lock size={18} style={{ position: "absolute", left: "16px", top: "50%", transform: "translateY(-50%)", color: "#94a3b8" }} />
-                <input
-                  style={{ 
-                    width: "100%", padding: "14px 48px 14px 48px", borderRadius: "14px", 
-                    background: "#f8fafc", border: "1px solid rgba(0,0,0,0.12)",
-                    color: "#0f172a", outline: "none", transition: "all 0.25s ease",
-                    fontSize: "0.95rem", fontWeight: 600
-                  }}
-                  className="auth-input-premium"
-                  name="password"
-                  type={showPassword ? "text" : "password"}
-                  placeholder="Password (min 6 chars)"
-                  value={form.password}
-                  onChange={handleChange}
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  style={{
-                    position: "absolute", right: "16px", top: "50%", transform: "translateY(-50%)",
-                    background: "none", border: "none", color: "#94a3b8", cursor: "pointer"
-                  }}
+            {error && (
+              <motion.div 
+                initial={{ opacity: 0, x: 15 }}
+                animate={{ opacity: 1, x: 0 }}
+                style={{ 
+                  background: "rgba(255, 255, 255, 0.08)",
+                  color: "#ffffff", 
+                  padding: "12px 16px",
+                  borderRadius: "14px",
+                  marginBottom: "20px",
+                  fontSize: "0.85rem",
+                  border: "1px solid rgba(255, 255, 255, 0.25)",
+                  fontWeight: 600,
+                  textAlign: "left"
+                }}
+              >
+                {error}
+              </motion.div>
+            )}
+
+            <AnimatePresence mode="wait">
+              {step === 1 ? (
+                <motion.form 
+                  key="step1"
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 10 }}
+                  onSubmit={handleNextStep} 
+                  style={{ display: "flex", flexDirection: "column", gap: "16px" }}
                 >
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
-              </div>
+                  <div style={{ position: "relative" }}>
+                    <User size={18} style={{ position: "absolute", left: "16px", top: "50%", transform: "translateY(-50%)", color: "#71717a" }} />
+                    <input
+                      style={{ 
+                        width: "100%",
+                        padding: "14px 16px 14px 48px",
+                        borderRadius: "14px", 
+                        background: "#000000",
+                        border: "1px solid rgba(255, 255, 255, 0.18)",
+                        color: "#ffffff",
+                        outline: "none",
+                        fontSize: "0.92rem",
+                        fontWeight: 500
+                      }}
+                      name="name"
+                      placeholder="Your Name"
+                      value={form.name}
+                      onChange={handleChange}
+                      required
+                    />
+                  </div>
 
-              <button 
-                type="submit" 
-                className="btn-primary" 
-                style={{ 
-                  width: "100%", marginTop: "6px", padding: "14px",
-                  fontSize: "0.98rem"
-                }}
-              >
-                Continue to Preferences <ArrowRight size={18} />
-              </button>
-            </motion.form>
-          ) : (
-            <motion.form 
-              key="step2"
-              initial={{ opacity: 0, x: 15 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -15 }}
-              onSubmit={handleSubmit} 
-              style={{ display: "flex", flexDirection: "column", gap: "24px" }}
-            >
-              <ProfileSelection selections={form} onSelect={handleSelect} />
+                  <div style={{ position: "relative" }}>
+                    <Mail size={18} style={{ position: "absolute", left: "16px", top: "50%", transform: "translateY(-50%)", color: "#71717a" }} />
+                    <input
+                      style={{ 
+                        width: "100%",
+                        padding: "14px 16px 14px 48px",
+                        borderRadius: "14px", 
+                        background: "#000000",
+                        border: "1px solid rgba(255, 255, 255, 0.18)",
+                        color: "#ffffff",
+                        outline: "none",
+                        fontSize: "0.92rem",
+                        fontWeight: 500
+                      }}
+                      name="email"
+                      type="email"
+                      placeholder="Email address"
+                      value={form.email}
+                      onChange={handleChange}
+                      required
+                    />
+                  </div>
 
-              <button 
-                type="submit" 
-                className="btn-primary" 
-                disabled={loading}
-                style={{ 
-                  width: "100%", padding: "14px",
-                  fontSize: "0.98rem"
-                }}
-              >
-                {loading ? "Creating Account..." : "Complete Sign Up"} <Sparkles size={18} />
-              </button>
-            </motion.form>
-          )}
-        </AnimatePresence>
+                  <div style={{ position: "relative" }}>
+                    <Lock size={18} style={{ position: "absolute", left: "16px", top: "50%", transform: "translateY(-50%)", color: "#71717a" }} />
+                    <input
+                      style={{ 
+                        width: "100%",
+                        padding: "14px 48px 14px 48px",
+                        borderRadius: "14px", 
+                        background: "#000000",
+                        border: "1px solid rgba(255, 255, 255, 0.18)",
+                        color: "#ffffff",
+                        outline: "none",
+                        fontSize: "0.92rem",
+                        fontWeight: 500
+                      }}
+                      name="password"
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Password (min 6 chars)"
+                      value={form.password}
+                      onChange={handleChange}
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      style={{
+                        position: "absolute", right: "16px", top: "50%", transform: "translateY(-50%)",
+                        background: "none", border: "none", color: "#71717a", cursor: "pointer"
+                      }}
+                    >
+                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
 
-        {step === 1 && (
-          <>
-            <div style={{ margin: "24px 0", display: "flex", alignItems: "center", gap: "12px" }}>
-              <div style={{ flex: 1, height: "1px", background: "rgba(255,255,255,0.08)" }} />
-            </div>
+                  <button 
+                    type="submit" 
+                    className="btn-minimal-primary" 
+                    style={{ 
+                      width: "100%",
+                      marginTop: "6px",
+                      padding: "14px",
+                      fontSize: "0.95rem",
+                      borderRadius: "14px"
+                    }}
+                  >
+                    Continue to Preferences <ArrowRight size={17} />
+                  </button>
+                </motion.form>
+              ) : (
+                <motion.form 
+                  key="step2"
+                  initial={{ opacity: 0, x: 10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -10 }}
+                  onSubmit={handleSubmit} 
+                  style={{ display: "flex", flexDirection: "column", gap: "20px", textAlign: "left" }}
+                >
+                  <ProfileSelection form={form} onChange={handleSelect} />
 
-            <div style={{ display: "flex", justifyContent: "center" }}>
-              <GoogleLogin
-                onSuccess={handleGoogleSuccess}
-                onError={() => setError("Google Sign-Up failed")}
-                theme="filled_black"
-                shape="circle"
-              />
-            </div>
-          </>
-        )}
+                  <div style={{ display: "flex", gap: "12px", marginTop: "12px" }}>
+                    <button 
+                      type="button" 
+                      onClick={() => setStep(1)}
+                      className="btn-minimal-secondary"
+                      style={{ flex: 1, padding: "12px", borderRadius: "14px", fontSize: "0.9rem" }}
+                    >
+                      Back
+                    </button>
+                    <button 
+                      type="submit" 
+                      className="btn-minimal-primary"
+                      disabled={loading}
+                      style={{ flex: 2, padding: "12px", borderRadius: "14px", fontSize: "0.95rem" }}
+                    >
+                      {loading ? "Creating Account..." : "Complete Sign Up"} <ArrowRight size={17} />
+                    </button>
+                  </div>
+                </motion.form>
+              )}
+            </AnimatePresence>
 
-        <p style={{ marginTop: "28px", fontSize: "0.9rem", color: "rgba(255,255,255,0.5)" }}>
-          Already have an account? <Link to="/login" style={{ color: "#fb7185", fontWeight: 700, textDecoration: "none" }}>Sign in</Link>
-        </p>
-      </motion.div>
+            <p style={{ marginTop: "24px", fontSize: "0.88rem", color: "#a1a1aa", fontWeight: 500 }}>
+              Already have an account? <Link to="/login" style={{ color: "#ffffff", fontWeight: 700, textDecoration: "none" }}>Sign in</Link>
+            </p>
+          </motion.div>
+        </div>
+
+        {/* MINIMAL FOOTER */}
+        <footer
+          style={{
+            textAlign: "center",
+            padding: "24px 20px",
+            borderTop: "1px solid rgba(255, 255, 255, 0.08)",
+            background: "rgba(9, 9, 11, 0.9)"
+          }}
+        >
+          <p style={{ fontSize: "0.78rem", color: "#71717a", margin: 0 }}>
+            &copy; 2026 Friday AI. All rights reserved.
+          </p>
+        </footer>
+
+      </div>
     </div>
   );
 };

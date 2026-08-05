@@ -34,7 +34,9 @@ const Chat = () => {
   const [copiedIndex, setCopiedIndex] = useState(null);
 
   const [voices, setVoices] = useState([]);
-  const [selectedVoice, setSelectedVoice] = useState("");
+  const [selectedVoice, setSelectedVoice] = useState(() => {
+    return localStorage.getItem("userVoice") || "";
+  });
 
   const scrollRef = useRef(null);
   const recognitionRef = useRef(null);
@@ -79,13 +81,21 @@ const Chat = () => {
     }
   }, []);
 
-  // Load voices
+  // Load voices and restore saved preference
   useEffect(() => {
     if (!synth) return;
     const loadVoices = () => {
       const v = synth.getVoices();
       setVoices(v);
-      if (v.length > 0 && !selectedVoice) setSelectedVoice(v[0].name);
+      if (v.length > 0) {
+        const saved = localStorage.getItem("userVoice");
+        const found = v.find((voice) => voice.name === saved);
+        if (found) {
+          setSelectedVoice(found.name);
+        } else if (!selectedVoice) {
+          setSelectedVoice(v[0].name);
+        }
+      }
     };
     loadVoices();
     synth.onvoiceschanged = loadVoices;
@@ -134,12 +144,45 @@ const Chat = () => {
     }
   }, [todayMood]);
 
+  const [isSpeaking, setIsSpeaking] = useState(false);
+
+  const stopAudio = () => {
+    if (synth) {
+      synth.cancel();
+      setIsSpeaking(false);
+    }
+  };
+
+  const handleVoiceChange = (newVoiceName) => {
+    setSelectedVoice(newVoiceName);
+    localStorage.setItem("userVoice", newVoiceName);
+
+    if (synth && voiceReplyRef.current) {
+      synth.cancel();
+      const sampleText = "Voice model updated.";
+      const utter = new SpeechSynthesisUtterance(sampleText);
+      const matchedVoice = voices.find((v) => v.name === newVoiceName);
+      if (matchedVoice) utter.voice = matchedVoice;
+
+      utter.onstart = () => setIsSpeaking(true);
+      utter.onend = () => setIsSpeaking(false);
+      utter.onerror = () => setIsSpeaking(false);
+
+      synth.speak(utter);
+    }
+  };
+
   const speakText = (text) => {
     if (!voiceReplyRef.current || !synth) return;
     synth.cancel();
     const utter = new SpeechSynthesisUtterance(text);
     const voice = voices.find((v) => v.name === selectedVoice);
     if (voice) utter.voice = voice;
+    
+    utter.onstart = () => setIsSpeaking(true);
+    utter.onend = () => setIsSpeaking(false);
+    utter.onerror = () => setIsSpeaking(false);
+
     synth.speak(utter);
   };
 
@@ -233,7 +276,7 @@ const Chat = () => {
         }}
       >
         <div style={{ padding: "24px 20px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <div onClick={() => navigate("/")} style={{ cursor: "pointer" }}>
+          <div onClick={() => navigate("/chat")} style={{ cursor: "pointer" }}>
             <FridayLogo size="1.3rem" color="#0f172a" />
           </div>
           <button
@@ -285,7 +328,7 @@ const Chat = () => {
             <div style={{ position: "relative" }}>
               <select
                 value={selectedVoice}
-                onChange={(e) => setSelectedVoice(e.target.value)}
+                onChange={(e) => handleVoiceChange(e.target.value)}
                 style={{ 
                   width: "100%", padding: "10px 32px 10px 14px", borderRadius: "14px", 
                   background: "#faf9f5", border: "1px solid rgba(0,0,0,0.12)",
@@ -421,24 +464,44 @@ const Chat = () => {
             </div>
           </div>
 
-          {/* Tone Switcher Pill in Top Right Header */}
-          <button
-            onClick={() => setShowMoodModal(true)}
-            style={{
-              display: "flex", alignItems: "center", gap: "8px",
-              padding: "7px 16px", borderRadius: "999px",
-              background: "#faf9f5", border: "1px solid rgba(234, 179, 8, 0.35)",
-              color: "#0f172a", fontSize: "0.82rem", fontWeight: 800,
-              cursor: "pointer", boxShadow: "0 2px 8px rgba(0,0,0,0.03)",
-              transition: "all 0.2s ease"
-            }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = "#fef08a"; }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = "#faf9f5"; }}
-          >
-            <Sparkles size={14} color="#d97706" />
-            <span>Tone: <strong style={{ color: "#d97706", textTransform: "capitalize" }}>{todayMood}</strong></span>
-            <span style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: 600 }}>(Change)</span>
-          </button>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            {isSpeaking && (
+              <motion.button
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                onClick={stopAudio}
+                style={{
+                  display: "flex", alignItems: "center", gap: "6px",
+                  padding: "7px 16px", borderRadius: "999px",
+                  background: "#dc2626", color: "#ffffff",
+                  fontSize: "0.82rem", fontWeight: 800, border: "none",
+                  cursor: "pointer", boxShadow: "0 0 16px rgba(220, 38, 38, 0.4)"
+                }}
+              >
+                <VolumeX size={15} />
+                <span>Stop Audio</span>
+              </motion.button>
+            )}
+
+            {/* Tone Switcher Pill in Top Right Header */}
+            <button
+              onClick={() => setShowMoodModal(true)}
+              style={{
+                display: "flex", alignItems: "center", gap: "8px",
+                padding: "7px 16px", borderRadius: "999px",
+                background: "#faf9f5", border: "1px solid rgba(234, 179, 8, 0.35)",
+                color: "#0f172a", fontSize: "0.82rem", fontWeight: 800,
+                cursor: "pointer", boxShadow: "0 2px 8px rgba(0,0,0,0.03)",
+                transition: "all 0.2s ease"
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = "#fef08a"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = "#faf9f5"; }}
+            >
+              <Sparkles size={14} color="#d97706" />
+              <span>Tone: <strong style={{ color: "#d97706", textTransform: "capitalize" }}>{todayMood}</strong></span>
+              <span style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: 600 }}>(Change)</span>
+            </button>
+          </div>
         </header>
 
         {/* Messages Scroll Area with WhatsApp-Style Friday AI Doodle Background */}
@@ -527,16 +590,34 @@ const Chat = () => {
                   {m.text}
                 </div>
 
-                <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.75rem", color: "#64748b" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "0.75rem", color: "#64748b" }}>
                   <span>{m.time}</span>
                   {m.type === "ai" && (
-                    <button 
-                      onClick={() => handleCopyMessage(m.text, i)}
-                      style={{ background: "none", border: "none", color: "#64748b", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px" }}
-                    >
-                      {copiedIndex === i ? <Check size={12} color="#d97706" /> : <Copy size={12} />}
-                      {copiedIndex === i ? "Copied" : "Copy"}
-                    </button>
+                    <>
+                      <button 
+                        onClick={() => handleCopyMessage(m.text, i)}
+                        style={{ background: "none", border: "none", color: "#64748b", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px" }}
+                      >
+                        {copiedIndex === i ? <Check size={12} color="#d97706" /> : <Copy size={12} />}
+                        {copiedIndex === i ? "Copied" : "Copy"}
+                      </button>
+
+                      {isSpeaking ? (
+                        <button 
+                          onClick={stopAudio}
+                          style={{ background: "none", border: "none", color: "#dc2626", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px", fontWeight: 700 }}
+                        >
+                          <VolumeX size={13} color="#dc2626" /> Stop Audio
+                        </button>
+                      ) : (
+                        <button 
+                          onClick={() => speakText(m.text)}
+                          style={{ background: "none", border: "none", color: "#64748b", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px" }}
+                        >
+                          <Volume2 size={13} /> Listen
+                        </button>
+                      )}
+                    </>
                   )}
                 </div>
               </motion.div>
