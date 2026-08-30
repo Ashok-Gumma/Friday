@@ -30,11 +30,20 @@ app.use("/api/auth", authRoutes);
 app.use("/api/chat", chatRoutes);
 
 // Serve frontend
-app.use(express.static(path.join(__dirname, "dist")));
+const distPath = path.join(__dirname, "../frontend/dist");
+const fallbackDist = path.join(__dirname, "dist");
+const staticPath = path.resolve(distPath);
+
+app.use(express.static(staticPath));
+app.use(express.static(fallbackDist));
 
 // React fallback
 app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "dist", "index.html"));
+  res.sendFile(path.join(staticPath, "index.html"), (err) => {
+    if (err) {
+      res.sendFile(path.join(fallbackDist, "index.html"));
+    }
+  });
 });
 
 // DB
