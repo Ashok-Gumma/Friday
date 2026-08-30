@@ -179,20 +179,25 @@ export async function getAIReply({ systemPrompt, messages = [], userMessage, sel
 
       const modelsToTry = ["gemini-3.6-flash", "gemini-flash-latest", "gemini-2.5-flash"];
       for (const mName of modelsToTry) {
-        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${mName}:generateContent?key=${geminiKey}`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            system_instruction: { parts: [{ text: systemPrompt }] },
-            contents,
-            generationConfig: { maxOutputTokens: 1000, temperature: 0.7 }
-          })
-        });
+        try {
+          const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${mName}:generateContent?key=${geminiKey}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            signal: AbortSignal.timeout(6000),
+            body: JSON.stringify({
+              system_instruction: { parts: [{ text: systemPrompt }] },
+              contents,
+              generationConfig: { maxOutputTokens: 1000, temperature: 0.7 }
+            })
+          });
 
-        if (res.ok) {
-          const data = await res.json();
-          const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-          if (text) return text.trim();
+          if (res.ok) {
+            const data = await res.json();
+            const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (text) return text.trim();
+          }
+        } catch (e) {
+          // Continue to next model on timeout or error
         }
       }
     } catch (err) {
@@ -209,6 +214,7 @@ export async function getAIReply({ systemPrompt, messages = [], userMessage, sel
           "Authorization": `Bearer ${process.env.GROQ_API_KEY}`,
           "Content-Type": "application/json"
         },
+        signal: AbortSignal.timeout(6000),
         body: JSON.stringify({
           model: "llama-3.3-70b-versatile",
           messages: [{ role: "system", content: systemPrompt }, ...messages],
