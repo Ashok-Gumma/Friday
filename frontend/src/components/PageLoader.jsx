@@ -1,62 +1,67 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import {
+  Sparkles,
+  Feather,
+  Heart,
+  Wind,
+  Moon,
+  Sun,
+  Smile,
+  Compass,
+  MessageCircle,
+  Brain,
+  Coffee,
+  Shield,
+  Leaf
+} from "lucide-react";
 
-/* ── All icons relevant to Friday AI emotional companion ── */
-const ICONS = [
-  { emoji: "😊", label: "Happy" },
-  { emoji: "😔", label: "Sad" },
-  { emoji: "😤", label: "Angry" },
-  { emoji: "🔥", label: "Motivated" },
-  { emoji: "🌿", label: "Calm" },
-  { emoji: "😰", label: "Anxious" },
-  { emoji: "🎯", label: "Focused" },
-  { emoji: "💛", label: "Love" },
-  { emoji: "💼", label: "Professional" },
-  { emoji: "🧠", label: "AI Brain" },
-  { emoji: "💬", label: "Chat" },
-  { emoji: "🎤", label: "Voice" },
-  { emoji: "✨", label: "Magic" },
-  { emoji: "❤️", label: "Heart" },
-  { emoji: "🌙", label: "Night" },
-  { emoji: "⚡", label: "Energy" },
-  { emoji: "🌊", label: "Flow" },
-  { emoji: "🫂", label: "Support" },
-  { emoji: "💡", label: "Insight" },
-  { emoji: "☕", label: "Relaxed" },
+/* ── Notion-style minimal icons relevant to Friday AI Emotional Sanctuary ── */
+const NOTION_ICONS = [
+  { icon: Feather, label: "Stillness" },
+  { icon: Heart, label: "Compassion" },
+  { icon: Wind, label: "Breath" },
+  { icon: Sparkles, label: "Clarity" },
+  { icon: Moon, label: "Rest" },
+  { icon: Sun, label: "Warmth" },
+  { icon: Smile, label: "Joy" },
+  { icon: Compass, label: "Guidance" },
+  { icon: MessageCircle, label: "Sanctuary" },
+  { icon: Leaf, label: "Grounding" },
+  { icon: Coffee, label: "Presence" },
+  { icon: Shield, label: "Safety" },
+  { icon: Brain, label: "Emotional EQ" },
 ];
 
-/* 
-  Blinkit-style: rapid icon cycling (every 80ms) — feels like a spinning slot.
-  After ~2s it slows + locks on the final Friday AI identity icon.
-*/
 const PageLoader = () => {
   const [iconIndex, setIconIndex] = useState(0);
-  const [phase, setPhase] = useState("fast");   // "fast" | "slow" | "done"
+  const [phase, setPhase] = useState("fast"); // "fast" | "slow" | "done"
   const intervalRef = useRef(null);
   const timeoutRef = useRef(null);
 
   useEffect(() => {
-    // Phase 1 — fast spin (80ms per icon)
+    // Phase 1 — rapid cycling (90ms)
     intervalRef.current = setInterval(() => {
-      setIconIndex(i => (i + 1) % ICONS.length);
-    }, 80);
+      setIconIndex((i) => (i + 1) % NOTION_ICONS.length);
+    }, 90);
 
-    // Phase 2 — after 1.3s slow down
+    // Phase 2 — after 1.2s decelerate smoothly
     timeoutRef.current = setTimeout(() => {
       clearInterval(intervalRef.current);
       setPhase("slow");
 
       intervalRef.current = setInterval(() => {
-        setIconIndex(i => (i + 1) % ICONS.length);
-      }, 220);
+        setIconIndex((i) => (i + 1) % NOTION_ICONS.length);
+      }, 200);
 
-      // Phase 3 — after another 0.7s lock onto brain/AI icon
+      // Phase 3 — lock on final Friday AI identity
       setTimeout(() => {
         clearInterval(intervalRef.current);
-        setIconIndex(ICONS.findIndex(i => i.label === "AI Brain"));
+        const finalIdx = NOTION_ICONS.findIndex((i) => i.label === "Sanctuary");
+        setIconIndex(finalIdx !== -1 ? finalIdx : 0);
         setPhase("done");
-      }, 700);
-    }, 1300);
+      }, 650);
+    }, 1200);
 
     return () => {
       clearInterval(intervalRef.current);
@@ -64,117 +69,116 @@ const PageLoader = () => {
     };
   }, []);
 
-  const currentIcon = ICONS[iconIndex];
+  const CurrentIcon = NOTION_ICONS[iconIndex].icon;
+  const currentLabel = NOTION_ICONS[iconIndex].label;
 
   return (
     <motion.div
       key="page-loader"
       initial={{ opacity: 1 }}
-      exit={{ opacity: 0, transition: { duration: 0.45, ease: "easeInOut" } }}
+      exit={{ opacity: 0, transition: { duration: 0.4, ease: "easeInOut" } }}
       style={{
-        position: "fixed", inset: 0, zIndex: 99999,
-        background: "#0d0d0d",
-        display: "flex", flexDirection: "column",
-        alignItems: "center", justifyContent: "center",
-        gap: "0",
-        fontFamily: "'Inter', -apple-system, sans-serif"
+        position: "fixed",
+        inset: 0,
+        zIndex: 99999,
+        background: "#0f0f11",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        fontFamily: "'Plus Jakarta Sans', 'Inter', -apple-system, sans-serif",
+        userSelect: "none"
       }}
     >
-      {/* Subtle background glow */}
+      {/* ── Minimal Floating Notion Icon (No Box) ── */}
       <div style={{
-        position: "absolute",
-        width: "320px", height: "320px",
-        borderRadius: "50%",
-        background: "radial-gradient(circle, rgba(167,139,250,0.08) 0%, transparent 70%)",
-        pointerEvents: "none"
-      }} />
-
-      {/* ── Icon Slot ── */}
-      <div style={{
-        width: "96px", height: "96px",
-        borderRadius: "24px",
-        background: "rgba(255,255,255,0.04)",
-        border: "1px solid rgba(255,255,255,0.08)",
-        display: "flex", alignItems: "center", justifyContent: "center",
-        position: "relative", overflow: "hidden",
-        marginBottom: "20px"
+        height: "64px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        position: "relative",
+        marginBottom: "16px"
       }}>
-        <AnimatePresence mode="popLayout">
-          <motion.span
+        <AnimatePresence mode="wait">
+          <motion.div
             key={iconIndex}
-            initial={{ y: 40, opacity: 0, scale: 0.8 }}
-            animate={{ y: 0, opacity: 1, scale: 1 }}
-            exit={{ y: -40, opacity: 0, scale: 0.8 }}
+            initial={{ opacity: 0, scale: 0.85, y: 6 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.85, y: -6 }}
             transition={{
-              duration: phase === "fast" ? 0.06 : phase === "slow" ? 0.18 : 0.3,
+              duration: phase === "fast" ? 0.08 : phase === "slow" ? 0.16 : 0.25,
               ease: "easeOut"
             }}
-            style={{ fontSize: "2.8rem", lineHeight: 1, display: "block", position: "absolute" }}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: phase === "done" ? "#f4f4f5" : "rgba(244, 244, 245, 0.85)"
+            }}
           >
-            {currentIcon.emoji}
-          </motion.span>
+            <CurrentIcon size={38} strokeWidth={1.6} />
+          </motion.div>
         </AnimatePresence>
       </div>
 
-      {/* ── Label under icon ── */}
-      <div style={{ height: "22px", marginBottom: "28px" }}>
+      {/* ── Notion Minimal Label ── */}
+      <div style={{ height: "20px", marginBottom: "28px", display: "flex", alignItems: "center", justifyContent: "center" }}>
         <AnimatePresence mode="wait">
           {phase === "done" ? (
             <motion.p
-              key="final"
-              initial={{ opacity: 0, y: 6 }}
+              key="final-label"
+              initial={{ opacity: 0, y: 4 }}
               animate={{ opacity: 1, y: 0 }}
-              style={{ fontSize: "0.82rem", fontWeight: 700, color: "#a78bfa", letterSpacing: "0.5px", textAlign: "center" }}
+              style={{
+                fontSize: "0.82rem",
+                fontWeight: 600,
+                color: "#f4f4f5",
+                letterSpacing: "0.8px",
+                textTransform: "uppercase"
+              }}
             >
-              Friday AI
+              Friday Sanctuary
             </motion.p>
           ) : (
             <motion.p
-              key={iconIndex + "-label"}
+              key={currentLabel}
               initial={{ opacity: 0 }}
-              animate={{ opacity: 0.4 }}
+              animate={{ opacity: 0.45 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.08 }}
-              style={{ fontSize: "0.75rem", fontWeight: 500, color: "rgba(255,255,255,0.35)", textAlign: "center", letterSpacing: "0.3px" }}
+              style={{
+                fontSize: "0.78rem",
+                fontWeight: 500,
+                color: "rgba(244, 244, 245, 0.6)",
+                letterSpacing: "0.4px"
+              }}
             >
-              {currentIcon.label}
+              {currentLabel}
             </motion.p>
           )}
         </AnimatePresence>
       </div>
 
-      {/* ── Progress bar ── */}
+      {/* ── Minimal Hairline Progress Bar ── */}
       <div style={{
-        width: "180px", height: "2px",
-        background: "rgba(255,255,255,0.07)",
-        borderRadius: "999px", overflow: "hidden"
+        width: "140px",
+        height: "1.5px",
+        background: "rgba(255, 255, 255, 0.08)",
+        borderRadius: "999px",
+        overflow: "hidden"
       }}>
         <motion.div
           initial={{ scaleX: 0, originX: 0 }}
           animate={{ scaleX: 1 }}
           transition={{ duration: 2.1, ease: [0.22, 1, 0.36, 1] }}
           style={{
-            width: "100%", height: "100%",
-            background: "linear-gradient(90deg, #a78bfa, #ffffff)",
-            borderRadius: "999px",
-            boxShadow: "0 0 8px rgba(167,139,250,0.5)"
+            width: "100%",
+            height: "100%",
+            background: "rgba(255, 255, 255, 0.85)",
+            borderRadius: "999px"
           }}
         />
       </div>
-
-      {/* ── Brand text at bottom ── */}
-      <motion.p
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 0.2 }}
-        transition={{ delay: 0.6 }}
-        style={{
-          position: "absolute", bottom: "32px",
-          fontSize: "0.72rem", fontWeight: 600, letterSpacing: "2px",
-          color: "#fff", textTransform: "uppercase"
-        }}
-      >
-        YOUR EMOTIONAL AI COMPANION
-      </motion.p>
     </motion.div>
   );
 };
