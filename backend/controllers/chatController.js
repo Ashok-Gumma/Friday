@@ -1,5 +1,6 @@
 import Message from "../models/Message.js";
 import { predictMood } from "../ml/moodPredictor.js";
+import { getAIReply } from "../lib/aiService.js";
 
 // Mood → instruction mapping
 const moodPrompts = {
@@ -70,31 +71,17 @@ Style:
 - If the user is CALM / RELAXED: Be soothing and unhurried.
 ${personalization}`;
 
-    // Call Llama via RapidAPI
-    const response = await fetch('https://open-ai21.p.rapidapi.com/conversationllama', {
-      method: "POST",
-      headers: {
-        'x-rapidapi-key': process.env.RAPIDAPI_KEY,
-        'x-rapidapi-host': process.env.RAPIDAPI_HOST,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        messages: [
-          {
-            role: "user",
-            content: systemPrompt
-          },
-          ...context,
-          { role: "user", content: message }
-        ],
-        web_access: false
-      })
+    // Get AI reply via multi-provider service with smart emotional fallback
+    const reply = await getAIReply({
+      systemPrompt,
+      messages: [
+        ...context,
+        { role: "user", content: message }
+      ],
+      userMessage: message,
+      selectedMood,
+      profile
     });
-
-    const data = await response.json();
-    
-    // Extract reply from 'result' field for this specific API
-    const reply = data.result || "I'm right here with you. What would you like to talk about?";
 
     // Save AI reply
     await Message.create({ userId, content: reply, type: "ai" });
@@ -106,7 +93,7 @@ ${personalization}`;
       confidence: mlPrediction.confidence
     });
   } catch (err) {
-    console.error("Llama AI error:", err);
+    console.error("Friday ML Chat error:", err);
     res.status(500).json({ message: "AI response system offline" });
   }
 };

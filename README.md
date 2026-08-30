@@ -43,7 +43,7 @@
 - **Database**: MongoDB with Mongoose ODM
 - **Security**: JSON Web Tokens (`jsonwebtoken`), bcryptjs, Google Auth Library
 - **ML & NLP**: Custom pure-JS Natural Language Preprocessor + Multinomial Naive Bayes Classifier with TF-IDF Vectorizer
-- **LLM Gateway**: RapidAPI (OpenAI / GPT Integration)
+- **Dialogue Engine**: Pure On-Device ML & Contextual Emotional Response Synthesis
 
 ---
 
