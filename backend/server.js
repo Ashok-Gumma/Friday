@@ -48,6 +48,8 @@ app.get("*", (req, res) => {
 // DB
 connectDB();
 
+const LIVE_URL = process.env.RENDER_EXTERNAL_URL || `http://localhost:${PORT}`;
+
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
+  console.log(`🚀 Server running on ${LIVE_URL}`);
 });

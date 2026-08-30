@@ -738,7 +738,7 @@ const Home = () => {
 
               <div style={{
                 flex: 1,
-                maxWidth: "240px",
+                maxWidth: "260px",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -759,7 +759,7 @@ const Home = () => {
                   textOverflow: "ellipsis",
                   whiteSpace: "nowrap"
                 }}>
-                  friday.ai<span style={{ color: "var(--text-muted)" }}>/sanctuary</span>
+                  {typeof window !== "undefined" && window.location.hostname !== "localhost" ? window.location.hostname : "friday.ai"}<span style={{ color: "var(--text-muted)" }}>/sanctuary</span>
                 </span>
                 <RotateCw size={10} style={{ color: "var(--text-muted)", opacity: 0.6, marginLeft: "auto", flexShrink: 0 }} />
               </div>
