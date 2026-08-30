@@ -2,9 +2,10 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, Save, User as UserIcon, Shield, Zap, Activity, Check } from "lucide-react";
+import { ArrowLeft, Save, Shield, Zap, Activity, Check } from "lucide-react";
 import ProfileSelection from "../components/ProfileSelection";
-import FridayLogo from "../components/FridayLogo.jsx";
+import ThemeToggle from "../components/ThemeToggle.jsx";
+import { NotionProfileArt } from "../components/NotionArt.jsx";
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -24,7 +25,7 @@ const Profile = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
       setProfile(res.data.profile);
-    } catch (err) {
+    } catch {
       navigate("/login");
     } finally {
       setLoading(false);
@@ -50,7 +51,7 @@ const Profile = () => {
       localStorage.setItem("userProfile", JSON.stringify(res.data.profile));
       setMessage("Profile saved successfully!");
       setTimeout(() => setMessage(""), 3500);
-    } catch (err) {
+    } catch {
       setMessage("Failed to save profile. Please retry.");
     } finally {
       setSaving(false);
@@ -73,117 +74,110 @@ const Profile = () => {
   };
 
   if (loading) return (
-    <div style={{ height: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#faf9f5", color: "#d97706" }}>
-      <p style={{ letterSpacing: "1px", fontWeight: 800, fontFamily: "'Inter', sans-serif" }}>Loading your profile...</p>
+    <div style={{ height: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--bg)", color: "var(--text)" }}>
+      <p style={{ letterSpacing: "1px", fontWeight: 700, fontFamily: "'Inter', sans-serif" }}>Loading your profile...</p>
     </div>
   );
 
   return (
-    <div style={{ 
-      minHeight: "100vh", background: "#faf9f5", color: "#0f172a", 
-      display: "flex", flexDirection: "column", position: "relative", overflow: "hidden",
-      fontFamily: "'Inter', sans-serif"
+    <div style={{
+      minHeight: "100vh", background: "var(--bg-soft)", color: "var(--text)",
+      display: "flex", flexDirection: "column", position: "relative",
+      fontFamily: "'Inter', sans-serif", transition: "background 0.2s ease, color 0.2s ease"
     }}>
-      {/* Background Glow */}
-      <div style={{
-        position: "absolute", inset: 0, pointerEvents: "none", zIndex: 0,
-        background: "radial-gradient(circle at 50% 10%, rgba(250, 204, 21, 0.15) 0%, transparent 60%)"
-      }} />
 
       {/* Header */}
-      <header style={{ 
-        padding: "24px clamp(20px, 6vw, 60px)", display: "flex", justifyContent: "space-between", alignItems: "center",
-        position: "relative", zIndex: 100, borderBottom: "1px solid rgba(234, 179, 8, 0.2)",
-        background: "rgba(255, 255, 255, 0.85)", backdropFilter: "blur(20px)"
+      <header style={{
+        padding: "16px clamp(20px, 6vw, 60px)", display: "flex", justifyContent: "space-between", alignItems: "center",
+        borderBottom: "1px solid var(--border)",
+        background: "var(--bg)", backdropFilter: "blur(20px)"
       }}>
-        <div onClick={() => navigate("/")} style={{ cursor: "pointer" }}>
-          <FridayLogo size="1.3rem" color="#0f172a" />
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          <button
+            onClick={() => navigate("/chat")}
+            style={{
+              display: "flex", alignItems: "center", gap: "8px",
+              background: "var(--bg-soft)", color: "var(--text)",
+              padding: "7px 16px", borderRadius: "8px",
+              border: "1px solid var(--border)", fontWeight: 600,
+              fontSize: "0.85rem", transition: "all 0.15s", cursor: "pointer"
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.borderColor = "var(--text)"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.borderColor = "var(--border)"; }}
+          >
+            <ArrowLeft size={15} /> Back to Chat
+          </button>
+          <span style={{ fontWeight: 800, fontSize: "0.95rem", color: "var(--text)" }}>Friday Profile</span>
         </div>
 
-        <button 
-          onClick={() => navigate("/chat")}
-          style={{ 
-            display: "flex", alignItems: "center", gap: "8px", 
-            background: "#ffffff", color: "#0f172a", 
-            padding: "10px 22px", borderRadius: "999px", 
-            border: "1px solid rgba(0, 0, 0, 0.12)", fontWeight: 700,
-            fontSize: "0.88rem", transition: "all 0.2s", cursor: "pointer",
-            boxShadow: "0 4px 12px rgba(0,0,0,0.04)"
-          }}
-          onMouseEnter={(e) => { e.currentTarget.style.background = "#f1efe7"; }}
-          onMouseLeave={(e) => { e.currentTarget.style.background = "#ffffff"; }}
-        >
-          <ArrowLeft size={16} /> Back to Chat
-        </button>
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          <ThemeToggle size="sm" />
+        </div>
       </header>
 
-      <main style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "40px 20px", position: "relative", zIndex: 10 }}>
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
+      <main style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "40px 20px" }}>
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-          style={{ 
-            width: "100%", maxWidth: "800px", padding: "44px 36px",
-            background: "#ffffff", border: "1px solid rgba(234, 179, 8, 0.25)",
-            borderRadius: "32px",
-            boxShadow: "0 25px 60px rgba(0,0,0,0.06)"
+          transition={{ duration: 0.45 }}
+          style={{
+            width: "100%", maxWidth: "800px", padding: "36px 32px",
+            background: "var(--bg-card)", border: "1px solid var(--border)",
+            borderRadius: "20px",
+            boxShadow: "var(--shadow-md)"
           }}
         >
-          {/* Profile Identity Card */}
-          <div style={{ textAlign: "center", marginBottom: "40px" }}>
-            <div style={{ 
-              width: "72px", height: "72px", borderRadius: "50%", 
-              background: "linear-gradient(135deg, #facc15 0%, #f59e0b 100%)", color: "#0e0a05",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              margin: "0 auto 16px", boxShadow: "0 8px 24px rgba(250, 204, 21, 0.4)"
-            }}>
-              <UserIcon size={32} />
+          {/* Profile Identity Card with Notion Profile Artwork */}
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", marginBottom: "32px" }}>
+            <div style={{ marginBottom: "12px" }}>
+              <NotionProfileArt width={120} height={120} />
             </div>
-            <h2 style={{ fontSize: "2rem", fontWeight: 900, letterSpacing: "-0.5px", marginBottom: "4px", color: "#0f172a" }}>
+            <h2 style={{ fontSize: "1.6rem", fontWeight: 800, letterSpacing: "-0.5px", marginBottom: "4px", color: "var(--text)" }}>
               {profile?.name || "User"}
             </h2>
-            <p style={{ color: "#64748b", fontSize: "0.92rem", fontWeight: 600 }}>{profile?.email}</p>
+            <p style={{ color: "var(--text-muted)", fontSize: "0.88rem", fontWeight: 500 }}>{profile?.email}</p>
           </div>
 
           {/* Quick Metrics Bar */}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "14px", marginBottom: "36px" }}>
-            <StatCard icon={<Zap size={18} fill="#78350f" />} label="Strengths Selected" value={profile?.strengths?.length || 0} />
-            <StatCard icon={<Shield size={18} />} label="Growth Areas" value={profile?.weaknesses?.length || 0} />
-            <StatCard icon={<Activity size={18} />} label="Hobbies Added" value={profile?.hobbies?.length || 0} />
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "12px", marginBottom: "32px" }}>
+            <StatCard icon={<Zap size={16} />} label="Strengths Selected" value={profile?.strengths?.length || 0} />
+            <StatCard icon={<Shield size={16} />} label="Growth Areas" value={profile?.weaknesses?.length || 0} />
+            <StatCard icon={<Activity size={16} />} label="Hobbies Added" value={profile?.hobbies?.length || 0} />
           </div>
 
           {/* Preferences Selection */}
-          <div style={{ marginBottom: "36px" }}>
-            <div style={{ padding: "24px", background: "#faf9f5", borderRadius: "24px", border: "1px solid rgba(234, 179, 8, 0.2)" }}>
+          <div style={{ marginBottom: "32px" }}>
+            <div style={{ padding: "20px", background: "var(--bg-soft)", borderRadius: "14px", border: "1px solid var(--border)" }}>
               <ProfileSelection selections={profile || { hobbies: [], strengths: [], weaknesses: [] }} onSelect={handleSelect} />
             </div>
           </div>
 
           {/* Save Action */}
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "16px" }}>
-            <button 
-              onClick={handleSave} 
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "14px" }}>
+            <button
+              onClick={handleSave}
               disabled={saving}
-              className="btn-primary"
-              style={{ 
-                padding: "15px 44px", fontSize: "0.98rem"
+              className="n-btn n-btn-primary"
+              style={{
+                padding: "12px 36px", fontSize: "0.92rem", fontWeight: 700, borderRadius: "8px"
               }}
             >
-              <Save size={18} />
+              <Save size={16} />
               {saving ? "Saving..." : "Save Preferences"}
             </button>
 
             {message && (
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-                style={{ 
-                  color: "#047857", fontWeight: 800, fontSize: "0.9rem",
+                style={{
+                  color: "#10b981", fontWeight: 700, fontSize: "0.85rem",
                   display: "flex", alignItems: "center", gap: "6px",
-                  padding: "8px 18px", borderRadius: "12px", background: "#d1fae5",
-                  border: "1px solid #6ee7b7"
+                  padding: "6px 16px", borderRadius: "8px",
+                  background: "rgba(16, 185, 129, 0.1)",
+                  border: "1px solid rgba(16, 185, 129, 0.25)"
                 }}
               >
-                <Check size={16} /> {message}
+                <Check size={15} /> {message}
               </motion.div>
             )}
           </div>
@@ -194,24 +188,23 @@ const Profile = () => {
 };
 
 const StatCard = ({ icon, label, value }) => (
-  <div style={{ 
-    padding: "18px 20px", display: "flex", alignItems: "center", gap: "14px", 
-    background: "#faf9f5", border: "1px solid rgba(234, 179, 8, 0.2)",
-    borderRadius: "18px"
+  <div style={{
+    padding: "14px 16px", display: "flex", alignItems: "center", gap: "12px",
+    background: "var(--bg-soft)", border: "1px solid var(--border)",
+    borderRadius: "12px"
   }}>
-    <div style={{ 
-      background: "#fef08a", color: "#78350f", 
-      padding: "10px", borderRadius: "12px", border: "1px solid rgba(234, 179, 8, 0.3)"
+    <div style={{
+      background: "var(--bg-card)", color: "var(--accent-purple)",
+      padding: "8px", borderRadius: "8px", border: "1px solid var(--border)",
+      display: "flex", alignItems: "center", justifyContent: "center"
     }}>
       {icon}
     </div>
     <div style={{ textAlign: "left" }}>
-      <p style={{ fontSize: "0.78rem", color: "#64748b", fontWeight: 700 }}>{label}</p>
-      <p style={{ fontSize: "1.3rem", fontWeight: 900, color: "#0f172a", marginTop: "2px" }}>{value}</p>
+      <p style={{ fontSize: "0.74rem", color: "var(--text-muted)", fontWeight: 600 }}>{label}</p>
+      <p style={{ fontSize: "1.2rem", fontWeight: 800, color: "var(--text)", marginTop: "2px" }}>{value}</p>
     </div>
   </div>
 );
 
 export default Profile;
-
-

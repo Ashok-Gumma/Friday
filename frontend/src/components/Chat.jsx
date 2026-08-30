@@ -1,706 +1,762 @@
-import React, { useEffect, useRef, useState, useLayoutEffect } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { 
-  User, Send, Mic, Volume2, 
-  VolumeX, ChevronDown, LogOut, Settings, 
-  Sparkles, MessageSquare, Shield, Smile,
-  Copy, Check, PanelLeftClose, PanelLeftOpen, Trash2, Heart
+import {
+  Send, Mic, Volume2, VolumeX, LogOut, Settings,
+  Copy, Check, Trash2, ChevronDown,
+  PanelLeftClose, PanelLeftOpen, BrainCircuit
 } from "lucide-react";
 import MoodPrompt from "./MoodPrompt";
-import FridayLogo from "./FridayLogo.jsx";
+import ThemeToggle from "./ThemeToggle.jsx";
+import { NotionChatArt } from "./NotionArt.jsx";
+
+const MOOD_EMOJI = {
+  happy: "😊", sad: "😔", angry: "😤", motivated: "🔥",
+  calm: "🌿", anxious: "😰", relaxed: "☕", romantic: "💛",
+  focused: "🎯", professional: "💼", neutral: "😐"
+};
 
 const quickPrompts = [
-  "Help me plan a productive morning routine.",
-  "Give me a 2-minute motivational boost.",
-  "What are some smart tips to improve daily focus?",
-  "Help me write a concise follow-up email for my team."
+  "I'm feeling overwhelmed — help me ground myself.",
+  "Give me an inspiring thought to start my day.",
+  "Help me reflect on a difficult conversation.",
+  "Guide me through a quick breathing exercise.",
 ];
 
 const Chat = () => {
   const navigate = useNavigate();
   const [messages, setMessages] = useState([]);
-  const [todayMood, setTodayMoodState] = useState(() => {
-    return localStorage.getItem("userMood") || "relaxed";
-  });
+  const [todayMood, setTodayMoodState] = useState(() => localStorage.getItem("userMood") || "relaxed");
+  const moodRef = useRef(localStorage.getItem("userMood") || "relaxed");
   const [showMoodModal, setShowMoodModal] = useState(false);
   const [input, setInput] = useState("");
   const [listening, setListening] = useState(false);
   const [voiceReply, setVoiceReply] = useState(true);
   const voiceReplyRef = useRef(true);
   const [isTyping, setIsTyping] = useState(false);
-  const [showSidebar, setShowSidebar] = useState(true);
+  const [isMobile, setIsMobile] = useState(() => typeof window !== "undefined" ? window.innerWidth < 768 : false);
+  const [showSidebar, setShowSidebar] = useState(() => typeof window !== "undefined" ? window.innerWidth >= 768 : true);
   const [copiedIndex, setCopiedIndex] = useState(null);
-
+  const [isSpeaking, setIsSpeaking] = useState(false);
   const [voices, setVoices] = useState([]);
-  const [selectedVoice, setSelectedVoice] = useState(() => {
-    return localStorage.getItem("userVoice") || "";
-  });
+  const [selectedVoice, setSelectedVoice] = useState(() => localStorage.getItem("userVoice") || "");
+  const selectedVoiceRef = useRef(localStorage.getItem("userVoice") || "");
+
+  // ── Responsive mobile listener ──
+  useEffect(() => {
+    const handleResize = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      if (mobile && showSidebar) {
+        // keep sidebar state or manage smoothly
+      }
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [showSidebar]);
 
   const scrollRef = useRef(null);
   const recognitionRef = useRef(null);
   const synth = typeof window !== "undefined" ? window.speechSynthesis : null;
-
   const profile = JSON.parse(localStorage.getItem("userProfile") || "{}");
 
+  // ── Mood setter ──
   const handleSetMood = (newMood) => {
     setTodayMoodState(newMood);
+    moodRef.current = newMood;
     localStorage.setItem("userMood", newMood);
     setShowMoodModal(false);
   };
 
-  // Setup speech recognition
+  // ── Speech recognition setup ──
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (SpeechRecognition) {
-      recognitionRef.current = new SpeechRecognition();
-      recognitionRef.current.continuous = false;
-      recognitionRef.current.interimResults = true;
-
-      recognitionRef.current.onstart = () => {
-        setListening(true);
-      };
-
-      recognitionRef.current.onresult = (e) => {
-        let transcript = "";
-        for (let i = 0; i < e.results.length; i++) {
-          transcript += e.results[i][0].transcript;
-        }
-        setInput(transcript);
-      };
-
-      recognitionRef.current.onend = () => {
-        setListening(false);
-      };
-
-      recognitionRef.current.onerror = () => {
-        setListening(false);
-      };
-    }
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) return;
+    const rec = new SR();
+    rec.continuous = false;
+    rec.interimResults = false;
+    rec.lang = "en-US";
+    rec.onresult = (e) => {
+      const text = e.results[0][0].transcript;
+      setInput(text);
+      handleSendText(text);
+    };
+    rec.onend = () => setListening(false);
+    rec.onerror = () => setListening(false);
+    recognitionRef.current = rec;
   }, []);
 
-  // Load voices and restore saved preference
-  useEffect(() => {
-    if (!synth) return;
-    const loadVoices = () => {
-      const v = synth.getVoices();
-      setVoices(v);
-      if (v.length > 0) {
-        const saved = localStorage.getItem("userVoice");
-        const found = v.find((voice) => voice.name === saved);
-        if (found) {
-          setSelectedVoice(found.name);
-        } else if (!selectedVoice) {
-          setSelectedVoice(v[0].name);
-        }
-      }
-    };
-    loadVoices();
-    synth.onvoiceschanged = loadVoices;
-  }, [synth, selectedVoice]);
-
-  // Auto scroll
-  useLayoutEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
-  }, [messages, isTyping]);
-
   const toggleMic = () => {
-    if (!recognitionRef.current) return;
+    if (!recognitionRef.current) {
+      alert("Voice input is not supported in this browser.");
+      return;
+    }
     if (listening) {
       recognitionRef.current.stop();
+      setListening(false);
     } else {
-      try {
-        setInput("");
-        recognitionRef.current.start();
-      } catch (err) {
-        console.error("Failed to start speech recognition:", err);
-      }
+      recognitionRef.current.start();
+      setListening(true);
     }
   };
 
-  // Load chat history
+  // ── Voice synthesis setup ──
   useEffect(() => {
-    if (todayMood) {
-      const fetchHistory = async () => {
-        try {
-          const token = localStorage.getItem("token");
-          const res = await axios.get("/api/chat/history", {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          setMessages(res.data.map(m => ({ 
-            type: m.type, 
-            text: m.content,
-            time: new Date(m.createdAt || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-          })));
-        } catch (err) {
-          console.error("Failed to load history:", err);
-        }
-      };
-      fetchHistory();
-    }
-  }, [todayMood]);
+    if (!synth) return;
+    const load = () => {
+      const v = synth.getVoices();
+      if (!v || v.length === 0) return;
+      setVoices(v);
+      const saved = localStorage.getItem("userVoice");
+      const found = v.find(x => x.name === saved);
+      if (found) {
+        setSelectedVoice(found.name);
+        selectedVoiceRef.current = found.name;
+      } else if (v.length > 0) {
+        const defaultV = v.find(x => x.lang.startsWith("en")) || v[0];
+        setSelectedVoice(defaultV.name);
+        selectedVoiceRef.current = defaultV.name;
+      }
+    };
+    load();
+    synth.onvoiceschanged = load;
+  }, [synth]);
 
-  const [isSpeaking, setIsSpeaking] = useState(false);
+  const handleVoiceChange = (voiceName) => {
+    setSelectedVoice(voiceName);
+    selectedVoiceRef.current = voiceName;
+    localStorage.setItem("userVoice", voiceName);
 
-  const stopAudio = () => {
+    // Audio preview of selected voice
     if (synth) {
       synth.cancel();
-      setIsSpeaking(false);
+      const allVoices = synth.getVoices();
+      const targetVoice = allVoices.find(x => x.name === voiceName);
+      const previewUtterance = new SpeechSynthesisUtterance("Voice updated.");
+      if (targetVoice) {
+        previewUtterance.voice = targetVoice;
+        previewUtterance.lang = targetVoice.lang || "en-US";
+      }
+      synth.speak(previewUtterance);
     }
   };
 
-  const handleVoiceChange = (newVoiceName) => {
-    setSelectedVoice(newVoiceName);
-    localStorage.setItem("userVoice", newVoiceName);
+  // ── Bottom anchor ref for reliable scroll ──
+  const bottomRef = useRef(null);
 
-    if (synth && voiceReplyRef.current) {
-      synth.cancel();
-      const sampleText = "Voice model updated.";
-      const utter = new SpeechSynthesisUtterance(sampleText);
-      const matchedVoice = voices.find((v) => v.name === newVoiceName);
-      if (matchedVoice) utter.voice = matchedVoice;
+  // ── Auto scroll ──
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (scrollRef.current) {
+        scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+      }
+      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, 40);
+    return () => clearTimeout(timer);
+  }, [messages, isTyping]);
 
-      utter.onstart = () => setIsSpeaking(true);
-      utter.onend = () => setIsSpeaking(false);
-      utter.onerror = () => setIsSpeaking(false);
+  // ── Load history ──
+  useEffect(() => {
+    const fetchHistory = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const res = await axios.get("/api/chat/history", { headers: { Authorization: `Bearer ${token}` } });
+        setMessages(res.data.map(m => ({
+          type: m.type, text: m.content,
+          time: new Date(m.createdAt || Date.now()).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+        })));
+      } catch { /* silent */ }
+    };
+    fetchHistory();
+  }, []);
 
-      synth.speak(utter);
-    }
-  };
-
+  // ── TTS ──
+  const stopAudio = () => { if (synth) { synth.cancel(); setIsSpeaking(false); } };
   const speakText = (text) => {
     if (!voiceReplyRef.current || !synth) return;
     synth.cancel();
-    const utter = new SpeechSynthesisUtterance(text);
-    const voice = voices.find((v) => v.name === selectedVoice);
-    if (voice) utter.voice = voice;
-    
-    utter.onstart = () => setIsSpeaking(true);
-    utter.onend = () => setIsSpeaking(false);
-    utter.onerror = () => setIsSpeaking(false);
 
-    synth.speak(utter);
-  };
+    // Fresh voice lookup directly from browser synth
+    const allVoices = synth.getVoices();
+    const activeVoiceName = selectedVoiceRef.current || localStorage.getItem("userVoice") || selectedVoice;
+    const v = allVoices.find(x => x.name === activeVoiceName) || allVoices[0];
 
-  const handleClearHistory = async () => {
-    if (!window.confirm("Are you sure you want to clear your chat history?")) return;
-    try {
-      const token = localStorage.getItem("token");
-      await axios.delete("/api/chat/clear", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setMessages([]);
-    } catch (err) {
-      console.error("Failed to clear history:", err);
+    const u = new SpeechSynthesisUtterance(text);
+    if (v) {
+      u.voice = v;
+      u.lang = v.lang || "en-US";
     }
+
+    // Dynamic Tone Modulation according to active mood
+    const currentMood = String(moodRef.current || "").toLowerCase();
+    if (currentMood === "calm" || currentMood === "sad" || currentMood === "relaxed") {
+      u.rate = 0.90;   // slower, gentle cadence
+      u.pitch = 0.95;  // deeper, softer pitch
+    } else if (currentMood === "motivated" || currentMood === "happy" || currentMood === "joyful") {
+      u.rate = 1.06;   // energetic, upbeat pace
+      u.pitch = 1.08;  // brighter pitch
+    } else if (currentMood === "anxious") {
+      u.rate = 0.92;   // grounding, steady
+      u.pitch = 0.98;
+    } else if (currentMood === "angry") {
+      u.rate = 0.95;   // soothing, calm
+      u.pitch = 0.92;
+    } else {
+      u.rate = 1.0;
+      u.pitch = 1.0;
+    }
+
+    u.onstart = () => setIsSpeaking(true);
+    u.onend = () => setIsSpeaking(false);
+    u.onerror = () => setIsSpeaking(false);
+    synth.speak(u);
   };
 
+  // ── Send message ──
   const handleSendText = async (textToSend) => {
     if (!textToSend.trim() || isTyping) return;
-
-    const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const ts = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
     const userMsg = textToSend.trim();
-    setMessages((prev) => [...prev, { type: "user", text: userMsg, time: timestamp }]);
+    setMessages(prev => [...prev, { type: "user", text: userMsg, time: ts }]);
     setInput("");
     setIsTyping(true);
+
+    // Safety net — if API hangs for 30s, auto-reset
+    const safetyTimer = setTimeout(() => {
+      setIsTyping(false);
+      setMessages(prev => [
+        ...prev,
+        { type: "ai", text: "Friday is taking too long to respond. Please try again.",
+          time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) }
+      ]);
+    }, 30000);
 
     try {
       const token = localStorage.getItem("token");
       const res = await axios.post("/api/chat", {
         message: userMsg,
-        mood: todayMood,
+        mood: moodRef.current,
         profile,
       }, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
+        timeout: 25000,   // 25-second hard timeout
       });
-
-      const aiText = res.data.reply;
-      const aiTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      clearTimeout(safetyTimer);
+      const aiTime = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
       setIsTyping(false);
-      setMessages((prev) => [...prev, { type: "ai", text: aiText, time: aiTime }]);
-      speakText(aiText);
-    } catch {
+      setMessages(prev => [...prev, { type: "ai", text: res.data.reply, time: aiTime }]);
+      speakText(res.data.reply);
+    } catch (err) {
+      clearTimeout(safetyTimer);
       setIsTyping(false);
-      setMessages((prev) => [...prev, { 
-        type: "ai", 
-        text: "I couldn't reach the server just now. Please try again in a moment!",
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      const errMsg = err.code === "ECONNABORTED"
+        ? "Friday took too long. Check your connection and try again."
+        : "Couldn't reach Friday. Please try again.";
+      setMessages(prev => [...prev, {
+        type: "ai", text: errMsg,
+        time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
       }]);
     }
   };
 
-  const handleFormSubmit = (e) => {
-    if (e) e.preventDefault();
-    handleSendText(input);
+  const handleCopy = (text, i) => {
+    navigator.clipboard.writeText(text);
+    setCopiedIndex(i);
+    setTimeout(() => setCopiedIndex(null), 2000);
   };
 
-  const handleCopyMessage = (text, index) => {
-    navigator.clipboard.writeText(text);
-    setCopiedIndex(index);
-    setTimeout(() => setCopiedIndex(null), 2000);
+  const handleClearHistory = async () => {
+    if (!window.confirm("Clear all chat history?")) return;
+    try {
+      const token = localStorage.getItem("token");
+      await axios.delete("/api/chat/history", { headers: { Authorization: `Bearer ${token}` } });
+      setMessages([]);
+    } catch {
+      alert("Failed to clear history");
+    }
   };
 
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("userProfile");
-    navigate("/");
+    navigate("/login");
   };
 
+  const moodEmoji = MOOD_EMOJI[todayMood] || "💬";
+
   return (
-    <div style={{ 
-      height: "100vh", display: "flex", background: "#faf9f5", 
-      color: "#0f172a", overflow: "hidden", position: "relative",
-      fontFamily: "'Inter', sans-serif"
+    <div style={{
+      display: "flex", height: "100dvh", minHeight: "100vh", width: "100vw",
+      background: "var(--bg)", color: "var(--text)",
+      fontFamily: "'Inter', sans-serif", overflow: "hidden",
+      position: "relative",
+      transition: "background 0.2s ease, color 0.2s ease"
     }}>
-      {/* Background Ambient Glow */}
-      <div style={{
-        position: "fixed", inset: 0, zIndex: 0, pointerEvents: "none",
-        background: "radial-gradient(circle at 70% 20%, rgba(225, 29, 72, 0.08) 0%, transparent 60%)"
-      }} />
 
-      {/* Retractable Light Glass Sidebar Matching Chat Page */}
-      <motion.aside 
-        initial={false}
-        animate={{ width: showSidebar ? "300px" : "0px", opacity: showSidebar ? 1 : 0 }}
-        transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-        style={{ 
-          background: "#ffffff", 
-          borderRight: "1px solid rgba(234, 179, 8, 0.22)",
-          display: "flex", flexDirection: "column", overflow: "hidden", 
-          flexShrink: 0, position: "relative", zIndex: 100,
-          boxShadow: "4px 0 25px rgba(0, 0, 0, 0.03)"
-        }}
-      >
-        <div style={{ padding: "24px 20px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <div onClick={() => navigate("/chat")} style={{ cursor: "pointer" }}>
-            <FridayLogo size="1.3rem" color="#0f172a" />
-          </div>
-          <button
-            onClick={() => setShowSidebar(false)}
-            style={{ background: "none", border: "none", color: "#64748b", cursor: "pointer", transition: "color 0.2s" }}
-            onMouseEnter={(e) => { e.currentTarget.style.color = "#0f172a"; }}
-            onMouseLeave={(e) => { e.currentTarget.style.color = "#64748b"; }}
+      {/* ── MOBILE BACKDROP ── */}
+      {isMobile && showSidebar && (
+        <div
+          className="chat-sidebar-backdrop"
+          onClick={() => setShowSidebar(false)}
+        />
+      )}
+
+      {/* ── SIDEBAR ── */}
+      <AnimatePresence>
+        {showSidebar && (
+          <motion.aside
+            initial={{ width: 0, opacity: 0, x: isMobile ? -280 : 0 }}
+            animate={{ width: isMobile ? 280 : 260, opacity: 1, x: 0 }}
+            exit={{ width: 0, opacity: 0, x: isMobile ? -280 : 0 }}
+            transition={{ duration: 0.22, ease: "easeOut" }}
+            className={isMobile ? "chat-sidebar-mobile" : ""}
+            style={{
+              background: "var(--bg-soft)",
+              borderRight: "1px solid var(--border)",
+              display: "flex", flexDirection: "column",
+              flexShrink: 0, overflow: "hidden"
+            }}
           >
-            <PanelLeftClose size={18} />
-          </button>
-        </div>
-
-        <div style={{ flex: 1, padding: "0 20px 24px", display: "flex", flexDirection: "column", gap: "24px", overflowY: "auto" }}>
-          {/* User Profile Card */}
-          <div>
-            <label style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: 800, display: "block", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "1px" }}>
-              Your Account
-            </label>
-            <div style={{ 
-              padding: "14px 16px", borderRadius: "18px",
-              background: "#faf9f5", border: "1px solid rgba(234, 179, 8, 0.25)",
-              display: "flex", alignItems: "center", gap: "12px",
-              boxShadow: "0 4px 12px rgba(0,0,0,0.02)"
+            {/* Brand / Logo */}
+            <div style={{
+              padding: "16px 18px", borderBottom: "1px solid var(--border)",
+              display: "flex", alignItems: "center", justifyContent: "space-between"
             }}>
-              <div style={{ 
-                width: "42px", height: "42px", borderRadius: "50%", 
-                background: "linear-gradient(135deg, #facc15 0%, #f59e0b 100%)", color: "#0e0a05",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                boxShadow: "0 4px 14px rgba(250, 204, 21, 0.4)", flexShrink: 0
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <span style={{ fontWeight: 800, fontSize: "0.95rem", letterSpacing: "-0.3px", color: "var(--text)" }}>
+                  Friday AI
+                </span>
+                <span style={{
+                  fontSize: "0.68rem", fontWeight: 700, padding: "2px 6px",
+                  borderRadius: "4px", background: "var(--bg-card)", border: "1px solid var(--border)",
+                  color: "var(--text-muted)", textTransform: "uppercase"
+                }}>
+                  ML 100K
+                </span>
+              </div>
+              <ThemeToggle size="sm" />
+            </div>
+
+            {/* Sidebar content */}
+            <div style={{ flex: 1, overflowY: "auto", padding: "14px 12px", display: "flex", flexDirection: "column", gap: "16px" }}>
+
+              {/* Current Mood card */}
+              <div style={{
+                background: "var(--bg-card)", border: "1px solid var(--border)",
+                borderRadius: "10px", padding: "12px 14px",
+                boxShadow: "var(--shadow-sm)"
               }}>
-                <User size={19} />
-              </div>
-              <div style={{ overflow: "hidden", textAlign: "left" }}>
-                <p style={{ fontSize: "0.92rem", fontWeight: 900, color: "#0f172a", whiteSpace: "nowrap", textOverflow: "ellipsis", overflow: "hidden" }}>
-                  {profile.name || "User"}
-                </p>
-                <p style={{ fontSize: "0.78rem", color: "#d97706", fontWeight: 800, textTransform: "capitalize" }}>
-                  {todayMood} Tone Active
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Voice Selector */}
-          <div>
-            <label style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: 800, display: "block", marginBottom: "8px", textTransform: "uppercase", letterSpacing: "1px" }}>
-              Voice Assistant Sound
-            </label>
-            <div style={{ position: "relative" }}>
-              <select
-                value={selectedVoice}
-                onChange={(e) => handleVoiceChange(e.target.value)}
-                style={{ 
-                  width: "100%", padding: "10px 32px 10px 14px", borderRadius: "14px", 
-                  background: "#faf9f5", border: "1px solid rgba(0,0,0,0.12)",
-                  color: "#0f172a", outline: "none", fontSize: "0.85rem", appearance: "none",
-                  fontWeight: 600, cursor: "pointer"
-                }}
-              >
-                {voices.map((v) => (
-                  <option key={v.name} value={v.name} style={{ background: "#ffffff", color: "#0f172a" }}>
-                    {v.name.substring(0, 26)}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown size={14} style={{ position: "absolute", right: "14px", top: "50%", transform: "translateY(-50%)", pointerEvents: "none", color: "#64748b" }} />
-            </div>
-          </div>
-
-          {/* Audio Response Toggle */}
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "4px 0" }}>
-            <span style={{ fontSize: "0.88rem", color: "#0f172a", fontWeight: 700 }}>Audio Responses</span>
-            <button 
-              onClick={() => {
-                const newValue = !voiceReply;
-                setVoiceReply(newValue);
-                voiceReplyRef.current = newValue;
-                if (!newValue && synth) synth.cancel();
-              }}
-              style={{ 
-                width: "46px", height: "24px", borderRadius: "999px", 
-                background: voiceReply ? "linear-gradient(135deg, #facc15 0%, #f59e0b 100%)" : "#e2e8f0",
-                border: "1px solid " + (voiceReply ? "#d97706" : "rgba(0,0,0,0.1)"),
-                position: "relative", transition: "all 0.25s ease",
-                cursor: "pointer", boxShadow: voiceReply ? "0 2px 8px rgba(250,204,21,0.4)" : "none"
-              }}
-            >
-              <motion.div 
-                animate={{ x: voiceReply ? 24 : 2 }}
-                transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                style={{ 
-                  width: "18px", height: "18px", borderRadius: "50%", 
-                  background: "#ffffff", 
-                  position: "absolute", top: "2px",
-                  boxShadow: "0 2px 4px rgba(0,0,0,0.2)"
-                }} 
-              />
-            </button>
-          </div>
-        </div>
-
-        {/* Sidebar Footer Actions */}
-        <div style={{ padding: "20px", borderTop: "1px solid rgba(234, 179, 8, 0.2)", display: "flex", flexDirection: "column", gap: "10px" }}>
-          <button 
-            onClick={handleClearHistory}
-            style={{ 
-              width: "100%", padding: "12px", borderRadius: "14px", display: "flex", alignItems: "center", gap: "10px", 
-              color: "#dc2626", background: "#fef2f2", border: "1px solid rgba(239, 68, 68, 0.2)",
-              transition: "all 0.2s", cursor: "pointer", fontSize: "0.85rem", fontWeight: 700
-            }}
-          >
-            <Trash2 size={16} /> Clear Chat History
-          </button>
-
-          <button 
-            onClick={() => navigate("/profile")}
-            style={{ 
-              width: "100%", padding: "12px", borderRadius: "14px", display: "flex", alignItems: "center", gap: "10px", 
-              color: "#0f172a", background: "#faf9f5", border: "1px solid rgba(0,0,0,0.08)",
-              transition: "all 0.2s", cursor: "pointer", fontSize: "0.85rem", fontWeight: 700
-            }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = "#f1efe7"; }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = "#faf9f5"; }}
-          >
-            <Settings size={16} /> Profile & Settings
-          </button>
-
-          <button 
-            onClick={handleLogout}
-            style={{ 
-              width: "100%", padding: "12px", borderRadius: "14px", display: "flex", alignItems: "center", gap: "10px", 
-              color: "#ffffff", background: "#0f172a", border: "none",
-              transition: "all 0.2s", cursor: "pointer", fontSize: "0.85rem", fontWeight: 800,
-              boxShadow: "0 4px 12px rgba(0,0,0,0.1)"
-            }}
-          >
-            <LogOut size={16} color="#facc15" /> Sign Out
-          </button>
-        </div>
-      </motion.aside>
-
-      {/* Main Chat Area */}
-      <main style={{ flex: 1, display: "flex", flexDirection: "column", position: "relative", zIndex: 10 }}>
-        
-        {/* Top Header */}
-        <header style={{ 
-          padding: "18px 28px", display: "flex", justifyContent: "space-between", alignItems: "center",
-          borderBottom: "1px solid rgba(234,179,8,0.2)",
-          background: "rgba(255, 255, 255, 0.85)", backdropFilter: "blur(20px)",
-          zIndex: 20 
-        }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-            {!showSidebar && (
-              <button 
-                onClick={() => setShowSidebar(true)}
-                style={{ 
-                  background: "#f1efe7", border: "1px solid rgba(0,0,0,0.08)",
-                  width: "36px", height: "36px", borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "center",
-                  color: "#0f172a", cursor: "pointer", transition: "all 0.2s"
-                }}
-              >
-                <PanelLeftOpen size={18} />
-              </button>
-            )}
-            <div style={{ textAlign: "left" }}>
-              <h3 style={{ fontSize: "1.05rem", fontWeight: 900, letterSpacing: "-0.3px", display: "flex", alignItems: "center", gap: "8px", color: "#0f172a" }}>
-                Friday AI <span style={{ fontSize: "0.72rem", color: "#78350f", padding: "2px 10px", borderRadius: "999px", background: "#fef08a", border: "1px solid rgba(234,179,8,0.4)", fontWeight: 800 }}>ONLINE</span>
-              </h3>
-              <div style={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "2px" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-                  <span style={{ 
-                    width: "6px", height: "6px", borderRadius: "50%", 
-                    background: listening ? "#d97706" : "#10b981", 
-                    boxShadow: listening ? "0 0 10px #facc15" : "0 0 8px #10b981",
-                  }} />
-                  <span style={{ 
-                    fontSize: "0.75rem", 
-                    color: listening ? "#d97706" : "#64748b", 
-                    fontWeight: 700
-                  }}>
-                    {listening ? "Listening to you..." : "Ready to help"}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px" }}>
+                  <span style={{ fontSize: "0.72rem", fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                    Active Mood
                   </span>
+                  <button
+                    onClick={() => setShowMoodModal(true)}
+                    style={{
+                      background: "none", border: "none", cursor: "pointer",
+                      fontSize: "0.75rem", color: "var(--accent-purple)", fontWeight: 600
+                    }}
+                  >
+                    Change
+                  </button>
                 </div>
+                <button
+                  onClick={() => setShowMoodModal(true)}
+                  style={{
+                    width: "100%", display: "flex", alignItems: "center", gap: "8px",
+                    background: "var(--bg-soft)", border: "1px solid var(--border)",
+                    borderRadius: "8px", padding: "8px 10px",
+                    cursor: "pointer", textAlign: "left",
+                    transition: "all 0.15s"
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.borderColor = "var(--text)"}
+                  onMouseLeave={e => e.currentTarget.style.borderColor = "var(--border)"}
+                >
+                  <span style={{ fontSize: "1.2rem" }}>{moodEmoji}</span>
+                  <div>
+                    <p style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text)", textTransform: "capitalize" }}>
+                      {todayMood}
+                    </p>
+                    <p style={{ fontSize: "0.7rem", color: "var(--text-muted)" }}>
+                      AI tone adapted
+                    </p>
+                  </div>
+                </button>
+              </div>
+
+              {/* Settings Section */}
+              <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                <span style={{ fontSize: "0.72rem", fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.5px", paddingLeft: "4px" }}>
+                  Preferences
+                </span>
+
+                {/* Voice Reply toggle */}
+                <div style={{
+                  display: "flex", alignItems: "center", justifyContent: "space-between",
+                  padding: "8px 10px", background: "var(--bg-card)",
+                  border: "1px solid var(--border)", borderRadius: "8px"
+                }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <Volume2 size={15} color="var(--text-muted)" />
+                    <span style={{ fontSize: "0.82rem", fontWeight: 500, color: "var(--text)" }}>Voice Reply</span>
+                  </div>
+                  <button
+                    onClick={() => {
+                      const next = !voiceReply;
+                      setVoiceReply(next);
+                      voiceReplyRef.current = next;
+                      if (!next) stopAudio();
+                    }}
+                    style={{
+                      width: "36px", height: "20px", borderRadius: "999px",
+                      background: voiceReply ? "var(--accent)" : "var(--border)",
+                      border: "none", position: "relative", cursor: "pointer", transition: "background .2s"
+                    }}
+                  >
+                    <span style={{
+                      position: "absolute", top: "2px",
+                      left: voiceReply ? "18px" : "2px",
+                      width: "16px", height: "16px", borderRadius: "50%",
+                      background: "var(--bg)", transition: "left .2s",
+                      boxShadow: "0 1px 3px rgba(0,0,0,0.2)"
+                    }} />
+                  </button>
+                </div>
+
+                {/* Voice selector */}
+                {voices.length > 0 && (
+                  <div style={{
+                    padding: "8px 10px", background: "var(--bg-card)",
+                    border: "1px solid var(--border)", borderRadius: "8px"
+                  }}>
+                    <label style={{ fontSize: "0.72rem", fontWeight: 600, color: "var(--text-muted)", display: "block", marginBottom: "4px" }}>
+                      Voice Character
+                    </label>
+                    <select
+                      value={selectedVoice}
+                      onChange={e => handleVoiceChange(e.target.value)}
+                      style={{
+                        width: "100%", background: "var(--bg-soft)", border: "1px solid var(--border)",
+                        borderRadius: "6px", padding: "6px 8px", fontSize: "0.78rem",
+                        color: "var(--text)", outline: "none", cursor: "pointer"
+                      }}
+                    >
+                      {voices.map(v => (
+                        <option key={v.name} value={v.name}>
+                          {v.name.replace(/(Microsoft|Google|Apple)\s*/gi, "").slice(0, 24)} ({v.lang})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
               </div>
             </div>
+
+            {/* Sidebar Footer */}
+            <div style={{ padding: "12px", borderTop: "1px solid var(--border)", display: "flex", flexDirection: "column", gap: "6px" }}>
+              <button
+                onClick={handleClearHistory}
+                style={{
+                  display: "flex", alignItems: "center", gap: "8px",
+                  padding: "8px 10px", borderRadius: "6px", border: "none",
+                  background: "transparent", cursor: "pointer", color: "var(--text-muted)",
+                  fontSize: "0.82rem", fontWeight: 500, width: "100%", textAlign: "left",
+                  transition: "all 0.15s"
+                }}
+                onMouseEnter={e => { e.currentTarget.style.background = "var(--bg-hover)"; e.currentTarget.style.color = "var(--text)"; }}
+                onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "var(--text-muted)"; }}
+              >
+                <Trash2 size={14} /> Clear chat
+              </button>
+
+              <button
+                onClick={() => navigate("/profile")}
+                style={{
+                  display: "flex", alignItems: "center", gap: "8px",
+                  padding: "8px 10px", borderRadius: "6px", border: "none",
+                  background: "transparent", cursor: "pointer", color: "var(--text-muted)",
+                  fontSize: "0.82rem", fontWeight: 500, width: "100%", textAlign: "left",
+                  transition: "all 0.15s"
+                }}
+                onMouseEnter={e => { e.currentTarget.style.background = "var(--bg-hover)"; e.currentTarget.style.color = "var(--text)"; }}
+                onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "var(--text-muted)"; }}
+              >
+                <Settings size={14} /> Profile & ML Stats
+              </button>
+
+              <button
+                onClick={handleLogout}
+                style={{
+                  display: "flex", alignItems: "center", gap: "8px",
+                  padding: "8px 10px", borderRadius: "6px", border: "none",
+                  background: "transparent", cursor: "pointer", color: "#ef4444",
+                  fontSize: "0.82rem", fontWeight: 500, width: "100%", textAlign: "left",
+                  transition: "all 0.15s"
+                }}
+                onMouseEnter={e => { e.currentTarget.style.background = "rgba(239, 68, 68, 0.08)"; }}
+                onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}
+              >
+                <LogOut size={14} /> Sign out
+              </button>
+            </div>
+          </motion.aside>
+        )}
+      </AnimatePresence>
+
+      {/* ── MAIN CHAT COLUMN ── */}
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0, overflow: "hidden" }}>
+
+        {/* Header */}
+        <header style={{
+          padding: "0 20px", height: "52px", flexShrink: 0,
+          borderBottom: "1px solid var(--border)",
+          background: "var(--bg)",
+          display: "flex", alignItems: "center", justifyContent: "space-between"
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <button
+              onClick={() => setShowSidebar(s => !s)}
+              style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)", display: "flex", padding: "4px" }}
+              title={showSidebar ? "Hide sidebar" : "Show sidebar"}
+            >
+              {showSidebar ? <PanelLeftClose size={17} /> : <PanelLeftOpen size={17} />}
+            </button>
+            <span style={{ fontSize: "0.92rem", fontWeight: 700, color: "var(--text)" }}>Friday</span>
           </div>
 
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            {isSpeaking && (
-              <motion.button
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                onClick={stopAudio}
-                style={{
-                  display: "flex", alignItems: "center", gap: "6px",
-                  padding: "7px 16px", borderRadius: "999px",
-                  background: "#dc2626", color: "#ffffff",
-                  fontSize: "0.82rem", fontWeight: 800, border: "none",
-                  cursor: "pointer", boxShadow: "0 0 16px rgba(220, 38, 38, 0.4)"
-                }}
-              >
-                <VolumeX size={15} />
-                <span>Stop Audio</span>
-              </motion.button>
-            )}
+            <ThemeToggle size="sm" />
 
-            {/* Tone Switcher Pill in Top Right Header */}
+            {/* Mood pill in header */}
             <button
               onClick={() => setShowMoodModal(true)}
               style={{
-                display: "flex", alignItems: "center", gap: "8px",
-                padding: "7px 16px", borderRadius: "999px",
-                background: "#faf9f5", border: "1px solid rgba(234, 179, 8, 0.35)",
-                color: "#0f172a", fontSize: "0.82rem", fontWeight: 800,
-                cursor: "pointer", boxShadow: "0 2px 8px rgba(0,0,0,0.03)",
-                transition: "all 0.2s ease"
+                display: "flex", alignItems: "center", gap: "6px",
+                padding: "5px 12px", borderRadius: "8px", border: "1px solid var(--border)",
+                background: "var(--bg-soft)", cursor: "pointer", fontSize: "0.8rem", fontWeight: 600, color: "var(--text)",
+                transition: "all .15s"
               }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = "#fef08a"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = "#faf9f5"; }}
+              onMouseEnter={e => e.currentTarget.style.borderColor = "var(--text)"}
+              onMouseLeave={e => e.currentTarget.style.borderColor = "var(--border)"}
             >
-              <Sparkles size={14} color="#d97706" />
-              <span>Tone: <strong style={{ color: "#d97706", textTransform: "capitalize" }}>{todayMood}</strong></span>
-              <span style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: 600 }}>(Change)</span>
+              {moodEmoji}
+              <span style={{ textTransform: "capitalize" }}>{todayMood}</span>
+              <ChevronDown size={12} color="var(--text-muted)" />
             </button>
           </div>
         </header>
 
-        {/* Messages Scroll Area with WhatsApp-Style Friday AI Doodle Background */}
-        <div 
+        {/* Messages */}
+        <div
           ref={scrollRef}
-          style={{ 
-            flex: 1, padding: "24px clamp(16px, 4vw, 100px) 140px", 
-            overflowY: "auto", display: "flex", flexDirection: "column", gap: "18px",
-            position: "relative",
-            backgroundColor: "#f5f2e9",
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='120' height='120' viewBox='0 0 120 120' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23d97706' fill-opacity='0.07' fill-rule='evenodd'%3E%3Cpath d='M15 15h10v10H15zM45 15l5 10h-10zM80 15a5 5 0 1 0 0 10 5 5 0 0 0 0-10zM15 50a8 8 0 1 0 0 16 8 8 0 0 0 0-16zM50 50h12v6H50zM85 50l6 12h-12zM15 85h14v4H15zM50 85a6 6 0 1 0 0 12 6 6 0 0 0 0-12zM85 85h8v8h-8z'/%3E%3Cpath d='M20 20l4-4m-4 4l-4-4m24 4l4 4m-4-4l-4 4m60 0l-4-4m4 4l4-4M30 60a3 3 0 1 1-6 0 3 3 0 0 1 6 0zm35 0a4 4 0 1 1-8 0 4 4 0 0 1 8 0zm35 0a3 3 0 1 1-6 0 3 3 0 0 1 6 0z'/%3E%3Ctext x='15' y='110' font-family='sans-serif' font-size='7' font-weight='bold' fill='%23d97706' fill-opacity='0.08'%3EFRIDAY AI%3C/text%3E%3Ctext x='70' y='35' font-family='sans-serif' font-size='6' font-weight='bold' fill='%23d97706' fill-opacity='0.08'%3ESYNAPSE%3C/text%3E%3Ctext x='75' y='110' font-family='sans-serif' font-size='6' font-weight='bold' fill='%23d97706' fill-opacity='0.08'%3EVOICE%3C/text%3E%3C/g%3E%3C/svg%3E")`,
-            backgroundRepeat: "repeat",
-            backgroundSize: "180px 180px"
+          data-lenis-prevent="true"
+          style={{
+            flex: 1,
+            overflowY: "auto",
+            padding: "32px 20px 120px",
+            display: "flex",
+            flexDirection: "column",
+            background: "var(--bg)",
+            overscrollBehavior: "contain",
+            WebkitOverflowScrolling: "touch",
           }}
         >
-          {messages.length === 0 && (
-            <div style={{ margin: "auto", textAlign: "center", maxWidth: "540px", padding: "40px 20px" }}>
-              <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
-                <div style={{ 
-                  width: "72px", height: "72px", borderRadius: "24px",
-                  background: "#fef08a",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  border: "1px solid rgba(234, 179, 8, 0.4)", margin: "0 auto 20px",
-                  boxShadow: "0 10px 25px rgba(250,204,21,0.3)"
-                }}>
-                  <Sparkles size={32} color="#78350f" />
+          <div style={{ width: "100%", maxWidth: "760px", margin: "0 auto", display: "flex", flexDirection: "column", gap: "20px" }}>
+
+            {/* Empty state with Notion Artwork */}
+            {messages.length === 0 && (
+              <div style={{ textAlign: "center", padding: "40px 20px 20px" }}>
+                <div style={{ display: "flex", justifyContent: "center", marginBottom: "16px" }}>
+                  <NotionChatArt width={160} height={160} />
                 </div>
-              </motion.div>
-
-              <h3 style={{ fontSize: "1.4rem", fontWeight: 900, marginBottom: "8px", color: "#0f172a" }}>How can Friday help you today?</h3>
-              <p style={{ fontSize: "0.9rem", color: "#64748b", marginBottom: "28px", fontWeight: 500 }}>
-                Select a quick prompt to start or type your question below.
-              </p>
-
-              {/* Starter Prompt Chips */}
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "12px", width: "100%" }}>
-                {quickPrompts.map((prompt, idx) => (
-                  <motion.button
-                    key={idx}
-                    whileHover={{ scale: 1.02, backgroundColor: "#fef08a", borderColor: "#facc15" }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => handleSendText(prompt)}
-                    style={{
-                      padding: "14px 18px", borderRadius: "16px",
-                      background: "#ffffff", border: "1px solid rgba(0,0,0,0.08)",
-                      color: "#0f172a", fontSize: "0.88rem", fontWeight: 600, textAlign: "left",
-                      cursor: "pointer", transition: "all 0.2s ease",
-                      boxShadow: "0 4px 12px rgba(0,0,0,0.02)"
-                    }}
-                  >
-                    {prompt}
-                  </motion.button>
-                ))}
+                <h2 style={{ fontSize: "1.4rem", fontWeight: 800, letterSpacing: "-0.5px", color: "var(--text)", marginBottom: "8px" }}>
+                  Hey, I'm Friday.
+                </h2>
+                <p style={{ fontSize: "0.9rem", color: "var(--text-muted)", maxWidth: "400px", margin: "0 auto 28px", lineHeight: 1.6 }}>
+                  You're feeling <strong style={{ color: "var(--text)", textTransform: "capitalize" }}>{todayMood}</strong> right now.
+                  I'll match my tone to support you. What's on your mind?
+                </p>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "10px", maxWidth: "600px", margin: "0 auto" }}>
+                  {quickPrompts.map((p, i) => (
+                    <button
+                      key={i}
+                      onClick={() => handleSendText(p)}
+                      style={{
+                        padding: "12px 14px", borderRadius: "10px", border: "1px solid var(--border)",
+                        background: "var(--bg-card)", cursor: "pointer", textAlign: "left",
+                        fontSize: "0.82rem", color: "var(--text-muted)", fontWeight: 500, lineHeight: 1.4,
+                        transition: "all .15s", fontFamily: "'Inter', sans-serif",
+                        boxShadow: "var(--shadow-sm)"
+                      }}
+                      onMouseEnter={e => { e.currentTarget.style.borderColor = "var(--text)"; e.currentTarget.style.color = "var(--text)"; e.currentTarget.style.background = "var(--bg-soft)"; }}
+                      onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--text-muted)"; e.currentTarget.style.background = "var(--bg-card)"; }}
+                    >
+                      {p}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
-          
-          <AnimatePresence>
-            {messages.map((m, i) => (
-              <motion.div 
-                key={i}
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                style={{ 
-                  alignSelf: m.type === "user" ? "flex-end" : "flex-start",
-                  maxWidth: "80%",
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: m.type === "user" ? "flex-end" : "flex-start",
-                  gap: "6px"
+            )}
+
+            {/* Messages */}
+            <AnimatePresence>
+              {messages.map((m, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.2 }}
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: m.type === "user" ? "flex-end" : "flex-start",
+                    gap: "4px"
+                  }}
+                >
+                  <div style={{
+                    maxWidth: "72%",
+                    padding: "12px 18px",
+                    borderRadius: m.type === "user" ? "18px 18px 4px 18px" : "18px 18px 18px 4px",
+                    background: m.type === "user" ? "var(--chat-bubble-user)" : "var(--chat-bubble-ai)",
+                    color: m.type === "user" ? "var(--chat-bubble-user-text)" : "var(--chat-bubble-ai-text)",
+                    border: m.type === "user" ? "none" : "1px solid var(--border)",
+                    fontSize: "0.9375rem",
+                    lineHeight: 1.6,
+                    fontWeight: 400,
+                    boxShadow: "var(--shadow-sm)"
+                  }}>
+                    {m.text}
+                  </div>
+
+                  {/* Message meta */}
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "0.72rem", color: "var(--text-faint)" }}>
+                    <span>{m.time}</span>
+                    {m.type === "ai" && (
+                      <>
+                        <button
+                          onClick={() => handleCopy(m.text, i)}
+                          style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)", display: "flex", alignItems: "center", gap: "3px", fontSize: "0.72rem", padding: "0" }}
+                          onMouseEnter={e => e.currentTarget.style.color = "var(--text)"}
+                          onMouseLeave={e => e.currentTarget.style.color = "var(--text-muted)"}
+                        >
+                          {copiedIndex === i ? <Check size={11} /> : <Copy size={11} />}
+                          {copiedIndex === i ? "Copied" : "Copy"}
+                        </button>
+                        <button
+                          onClick={() => isSpeaking ? stopAudio() : speakText(m.text)}
+                          style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-muted)", display: "flex", alignItems: "center", gap: "3px", fontSize: "0.72rem", padding: "0" }}
+                          onMouseEnter={e => e.currentTarget.style.color = "var(--text)"}
+                          onMouseLeave={e => e.currentTarget.style.color = "var(--text-muted)"}
+                        >
+                          {isSpeaking ? <VolumeX size={11} /> : <Volume2 size={11} />}
+                          {isSpeaking ? "Stop" : "Listen"}
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+
+            {/* Typing indicator */}
+            {isTyping && (
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ alignSelf: "flex-start" }}>
+                <div style={{
+                  padding: "12px 16px", borderRadius: "18px 18px 18px 4px",
+                  background: "var(--chat-bubble-ai)", border: "1px solid var(--border)",
+                  display: "flex", alignItems: "center", gap: "4px"
+                }}>
+                  <span className="wave-dot" />
+                  <span className="wave-dot" />
+                  <span className="wave-dot" />
+                </div>
+                <p style={{ fontSize: "0.7rem", color: "var(--text-muted)", marginTop: "4px", marginLeft: "4px" }}>
+                  Friday is thinking…
+                </p>
+              </motion.div>
+            )}
+
+            {/* Scroll anchor — always at the very bottom */}
+            <div ref={bottomRef} style={{ height: "1px" }} />
+          </div>
+        </div>
+
+        {/* Input bar */}
+        <div style={{
+          padding: "12px 20px 20px",
+          borderTop: "1px solid var(--border)",
+          background: "var(--bg)",
+          flexShrink: 0
+        }}>
+          <form
+            onSubmit={e => { e.preventDefault(); handleSendText(input); }}
+            style={{
+              maxWidth: "760px", margin: "0 auto",
+              display: "flex", alignItems: "flex-end", gap: "8px",
+              background: "var(--bg-soft)", border: "1px solid var(--border)",
+              borderRadius: "12px", padding: "10px 12px",
+              transition: "border-color .15s"
+            }}
+            onFocus={e => e.currentTarget.style.borderColor = "var(--text)"}
+            onBlur={e => e.currentTarget.style.borderColor = "var(--border)"}
+          >
+            <textarea
+              value={input}
+              onChange={e => setInput(e.target.value)}
+              onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSendText(input); } }}
+              placeholder={`Message Friday (you're feeling ${todayMood})...`}
+              rows={1}
+              style={{
+                flex: 1, background: "transparent", border: "none", outline: "none",
+                resize: "none", fontFamily: "'Inter', sans-serif", fontSize: "0.9375rem",
+                color: "var(--text)", lineHeight: 1.5, maxHeight: "120px", overflowY: "auto"
+              }}
+            />
+            <div style={{ display: "flex", gap: "6px", alignItems: "center", flexShrink: 0 }}>
+              <button
+                type="button"
+                onClick={toggleMic}
+                title="Voice input"
+                style={{
+                  width: "34px", height: "34px", borderRadius: "8px", border: "none",
+                  background: listening ? "var(--accent)" : "transparent",
+                  color: listening ? "var(--bg)" : "var(--text-muted)",
+                  cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+                  transition: "all .15s"
                 }}
               >
-                <div style={{
-                  padding: "16px 22px",
-                  borderRadius: m.type === "user" ? "22px 22px 4px 22px" : "22px 22px 22px 4px",
-                  background: m.type === "user" 
-                    ? "linear-gradient(135deg, #facc15 0%, #f59e0b 100%)" 
-                    : "#ffffff",
-                  border: m.type === "user" ? "none" : "1px solid rgba(234, 179, 8, 0.25)",
-                  color: "#0f172a",
-                  fontWeight: m.type === "user" ? 800 : 500,
-                  fontSize: "0.95rem",
-                  lineHeight: 1.6,
-                  boxShadow: m.type === "user" ? "0 6px 20px rgba(250,204,21,0.35)" : "0 6px 20px rgba(0,0,0,0.04)"
-                }}>
-                  {m.text}
-                </div>
-
-                <div style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "0.75rem", color: "#64748b" }}>
-                  <span>{m.time}</span>
-                  {m.type === "ai" && (
-                    <>
-                      <button 
-                        onClick={() => handleCopyMessage(m.text, i)}
-                        style={{ background: "none", border: "none", color: "#64748b", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px" }}
-                      >
-                        {copiedIndex === i ? <Check size={12} color="#d97706" /> : <Copy size={12} />}
-                        {copiedIndex === i ? "Copied" : "Copy"}
-                      </button>
-
-                      {isSpeaking ? (
-                        <button 
-                          onClick={stopAudio}
-                          style={{ background: "none", border: "none", color: "#dc2626", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px", fontWeight: 700 }}
-                        >
-                          <VolumeX size={13} color="#dc2626" /> Stop Audio
-                        </button>
-                      ) : (
-                        <button 
-                          onClick={() => speakText(m.text)}
-                          style={{ background: "none", border: "none", color: "#64748b", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px" }}
-                        >
-                          <Volume2 size={13} /> Listen
-                        </button>
-                      )}
-                    </>
-                  )}
-                </div>
-              </motion.div>
-            ))}
-          </AnimatePresence>
-
-          {isTyping && (
-            <motion.div 
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-              style={{ alignSelf: "flex-start", display: "flex", alignItems: "center", gap: "8px", padding: "12px 18px", borderRadius: "18px", background: "#ffffff", border: "1px solid rgba(234, 179, 8, 0.25)" }}
-            >
-              <div className="wave-animation" style={{ display: "flex", gap: "4px" }}>
-                <span /><span /><span /><span />
-              </div>
-              <span style={{ fontSize: "0.85rem", color: "#d97706", fontWeight: 700 }}>Friday is typing...</span>
-            </motion.div>
-          )}
-        </div>
-
-        {/* Input Bar */}
-        <div style={{ 
-          position: "absolute", bottom: 0, left: 0, right: 0, 
-          padding: "20px clamp(16px, 5vw, 120px)", 
-          background: "linear-gradient(to top, #faf9f5 80%, transparent)"
-        }}>
-          <form 
-            onSubmit={handleFormSubmit}
-            style={{ 
-              display: "flex", alignItems: "center", gap: "10px", 
-              background: "#ffffff", 
-              border: "1px solid rgba(234, 179, 8, 0.3)",
-              borderRadius: "999px", padding: "8px 12px 8px 22px",
-              boxShadow: "0 10px 40px rgba(0,0,0,0.06)",
-              backdropFilter: "blur(30px)"
-            }}
-          >
-            <input 
-              type="text" 
-              placeholder="Ask Friday anything..." 
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              style={{ 
-                flex: 1, background: "none", border: "none", outline: "none", 
-                color: "#0f172a", fontSize: "0.95rem", fontWeight: 600
-              }}
-              disabled={isTyping}
-            />
-
-            <button 
-              type="button"
-              onClick={toggleMic}
-              style={{ 
-                padding: "10px", borderRadius: "50%", 
-                background: listening ? "rgba(250,204,21,0.3)" : "#f1efe7", 
-                border: "1px solid " + (listening ? "#eab308" : "rgba(0,0,0,0.08)"),
-                color: listening ? "#d97706" : "#64748b", cursor: "pointer",
-                transition: "all 0.2s"
-              }}
-            >
-              <Mic size={18} />
-            </button>
-
-            <button 
-              type="submit" 
-              disabled={!input.trim() || isTyping}
-              className="btn-primary"
-              style={{ 
-                width: "42px", height: "42px", borderRadius: "50%", padding: 0,
-                opacity: !input.trim() || isTyping ? 0.4 : 1
-              }}
-            >
-              <Send size={18} />
-            </button>
+                <Mic size={16} />
+              </button>
+              <button
+                type="submit"
+                disabled={!input.trim() || isTyping}
+                style={{
+                  width: "34px", height: "34px", borderRadius: "8px", border: "none",
+                  background: input.trim() ? "var(--accent)" : "var(--border)",
+                  color: input.trim() ? "var(--bg)" : "var(--text-faint)",
+                  cursor: input.trim() ? "pointer" : "not-allowed",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  transition: "all .15s"
+                }}
+              >
+                <Send size={15} />
+              </button>
+            </div>
           </form>
+          <p style={{ fontSize: "0.72rem", color: "var(--text-faint)", textAlign: "center", marginTop: "8px" }}>
+            Friday uses ML to adapt its tone to your selected mood
+          </p>
         </div>
-      </main>
+      </div>
 
-      {/* Mood Switcher Modal Overlay */}
+      {/* Mood Modal */}
       {showMoodModal && (
-        <MoodPrompt 
-          isModal={true} 
-          onClose={() => setShowMoodModal(false)} 
-          onMoodSelect={handleSetMood} 
+        <MoodPrompt
+          onMoodSelect={handleSetMood}
+          isModal={true}
+          onClose={() => setShowMoodModal(false)}
         />
       )}
     </div>
@@ -708,4 +764,3 @@ const Chat = () => {
 };
 
 export default Chat;
-

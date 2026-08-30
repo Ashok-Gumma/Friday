@@ -1,0 +1,18 @@
+<svg width="240" height="240" viewBox="0 0 240 240" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Notion Doodled Brain / AI Spark -->
+  <path d="M120 40C85 40 60 65 60 100C60 125 75 145 95 155V180C95 185 100 190 105 190H135C140 190 145 185 145 180V155C165 145 180 125 180 100C180 65 155 40 120 40Z" fill="#ffffff" stroke="#000000" stroke-width="4" stroke-linejoin="round" />
+  <!-- Brain folds inside bulb -->
+  <path d="M90 95C90 80 100 70 115 70C125 70 130 75 130 85C130 95 120 100 115 105C110 110 110 115 110 125" stroke="#000000" stroke-width="4" stroke-linecap="round" />
+  <circle cx="110" cy="140" r="3" fill="#000000" />
+  <!-- Base Threads -->
+  <line x1="100" y1="198" x2="140" y2="198" stroke="#000000" stroke-width="4" stroke-linecap="round" />
+  <line x1="105" y1="206" x2="135" y2="206" stroke="#000000" stroke-width="4" stroke-linecap="round" />
+  <!-- Glow lines / stitches -->
+  <path d="M45 100H25" stroke="#000000" stroke-width="4" stroke-linecap="round" />
+  <path d="M195 100H215" stroke="#000000" stroke-width="4" stroke-linecap="round" />
+  <path d="M65 45L50 30" stroke="#000000" stroke-width="4" stroke-linecap="round" />
+  <path d="M175 45L190 30" stroke="#000000" stroke-width="4" stroke-linecap="round" />
+  <!-- Stitched cross details -->
+  <path d="M165 120L175 130M175 120L165 130" stroke="#000000" stroke-width="3" stroke-linecap="round" />
+  <path d="M65 120L75 130M75 120L65 130" stroke="#000000" stroke-width="3" stroke-linecap="round" />
+</svg>

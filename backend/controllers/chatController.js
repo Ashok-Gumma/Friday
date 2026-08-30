@@ -1,14 +1,18 @@
 import Message from "../models/Message.js";
+import { predictMood } from "../ml/moodPredictor.js";
 
 // Mood → instruction mapping
 const moodPrompts = {
-  happy: "Be cheerful, upbeat, and playful.",
+  happy: "Be cheerful, upbeat, and playful. Match their positive energy!",
   calm: "Be calm, reassuring, and gently supportive.",
-  angry: "Be firm but cool-headed, slightly witty, never rude.",
-  sad: "Be kind, empathetic, and softly encouraging.",
+  angry: "Be calm, de-escalating, cool-headed, and understanding.",
+  sad: "Be comforting, deeply empathetic, gentle, and softly encouraging.",
   romantic: "Be sweet, warm, and a little charming.",
-  motivational: "Be hype, energetic, and encouraging like a coach.",
+  motivated: "Be hype, energetic, ambitious, and encouraging like a high-performance coach.",
+  anxious: "Be soothing, reassuring, validating, and grounding.",
   chill: "Be relaxed, cool, and friendly.",
+  relaxed: "Be serene, easygoing, and warm.",
+  neutral: "Be clear, concise, and helpful.",
   professional: "Be clear, polite, and lightly friendly.",
 };
 
@@ -21,10 +25,17 @@ export const chatWithAI = async (req, res) => {
       return res.status(400).json({ message: "Message is required" });
     }
 
+    // The user's selected mood is the primary driver
+    const selectedMood = (mood || "relaxed").toLowerCase();
+
+    // ML predicts emotional nuances/tone from user's message
+    const mlPrediction = predictMood(message);
+
     // Save user message
     await Message.create({ userId, content: message, type: "user" });
 
-    const moodInstruction = moodPrompts[mood] || "Be friendly and helpful.";
+    // Strong mood-specific behavioral instructions based on user selected mood
+    const moodInstruction = moodPrompts[selectedMood] || "Be calm, supportive, and friendly.";
 
     // Optional personalization
     let personalization = "";
@@ -45,6 +56,20 @@ export const chatWithAI = async (req, res) => {
       content: m.content
     }));
 
+    // Build targeted prompt directly adhering to user's selected mood
+    const systemPrompt = `You are Friday, an AI companion. 
+The user is currently feeling: "${selectedMood.toUpperCase()}".
+Your primary goal is to respond specifically to match and support their "${selectedMood}" mood.
+Tone Guidelines: ${moodInstruction}
+Style:
+- Reply in 1-2 natural, human-like sentences.
+- If the user is SAD: Comfort them gently and empathetically.
+- If the user is ANGRY: Validate their frustration with cool-headed calmness.
+- If the user is MOTIVATED: Be energetic and high-performing.
+- If the user is HAPPY: Be cheerful and celebrate with them.
+- If the user is CALM / RELAXED: Be soothing and unhurried.
+${personalization}`;
+
     // Call Llama via RapidAPI
     const response = await fetch('https://open-ai21.p.rapidapi.com/conversationllama', {
       method: "POST",
@@ -57,14 +82,7 @@ export const chatWithAI = async (req, res) => {
         messages: [
           {
             role: "user",
-            content: `Instruction: You are a funny, cool AI chat buddy.
-${moodInstruction}
-Reply like a real human texting a friend. 
-Keep replies short (1–2 sentences max). 
-No long explanations. No essays. 
-Be witty, a little playful, and supportive. 
-Use simple words. Sound natural, not robotic.
-${personalization}`
+            content: systemPrompt
           },
           ...context,
           { role: "user", content: message }
@@ -76,12 +94,17 @@ ${personalization}`
     const data = await response.json();
     
     // Extract reply from 'result' field for this specific API
-    const reply = data.result || "Neural link saturation reached. Try again.";
+    const reply = data.result || "I'm right here with you. What would you like to talk about?";
 
     // Save AI reply
     await Message.create({ userId, content: reply, type: "ai" });
 
-    res.json({ reply });
+    res.json({ 
+      reply,
+      activeMood: selectedMood,
+      detectedMood: mlPrediction.predictedMood,
+      confidence: mlPrediction.confidence
+    });
   } catch (err) {
     console.error("Llama AI error:", err);
     res.status(500).json({ message: "AI response system offline" });
